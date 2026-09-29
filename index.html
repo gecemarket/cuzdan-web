@@ -15,17 +15,22 @@
     .gauge-bg { stroke: #E2E8F0; }
     .tab-btn-active { background-color: #F1F5F9 !important; color: #0F172A !important; font-weight: 700 !important; border: 1px solid #CBD5E1 !important; }
     .mobile-menu-active { background-color: #D1E7DD !important; color: #0F5132 !important; font-weight: 700 !important; }
+    .time-btn-active { background-color: #00A86B !important; color: #FFFFFF !important; font-weight: 700 !important; border-color: #00A86B !important; }
     .toggle-checkbox:checked { right: 0; border-color: #2EB85C; }
     .toggle-checkbox:checked + .toggle-label { background-color: #2EB85C; }
   </style>
 
-  <!-- ================= TÜM ÇEKİRDEK FONKSİYONLAR (EN TEPEDE, KESİNTİSİZ) ================= -->
+  <!-- ================= ÇEKİRDEK KONTROL VE MODAL MOTORU ================= -->
   <script>
     window.activeTab = 'dashboard';
     window.viewingAccountId = null;
     window.chosenAccColor = '#EA4335';
+    window.analyticsTimeframe = '1A';
+    window.activeMonth = 9; // 7: Temmuz, 8: Ağustos, 9: Eylül
+    window.activeYear = 2026;
 
-    // Sekmeler Arası Geçiş
+    const MONTH_NAMES = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
     window.switchTab = function(tabName) {
       window.activeTab = tabName;
       toggleDrawer(false);
@@ -54,7 +59,7 @@
       });
 
       if (tabName === 'accounts' && typeof renderAccountsPage === 'function') renderAccountsPage();
-      if (tabName === 'analytics' && typeof renderAnalyticsReport === 'function') renderAnalyticsReport();
+      if (tabName === 'analytics' && typeof renderAnalyticsFull === 'function') renderAnalyticsFull();
       if (tabName === 'records' && typeof renderRecordsPage === 'function') renderRecordsPage();
       if (tabName === 'dashboard' && typeof renderDashboardData === 'function') renderDashboardData();
     };
@@ -69,7 +74,6 @@
       if (m) m.style.display = open ? 'flex' : 'none';
     };
 
-    // Modal Açma / Kapatma
     window.openAccountModal = function() {
       const nameInput = document.getElementById('acc-name-input');
       const balInput = document.getElementById('acc-balance-input');
@@ -105,6 +109,43 @@
       const m = document.getElementById('record-modal');
       if (m) m.style.display = 'none';
     };
+
+    window.setTimeframe = function(tf) {
+      window.analyticsTimeframe = tf;
+      ['1G', '1H', '1A', '6A', '1Y', 'ALL'].forEach(k => {
+        const b = document.getElementById('tf-btn-' + k);
+        if (b) {
+          if (k === tf) b.className = "px-3 py-1 text-xs rounded-full border time-btn-active transition cursor-pointer";
+          else b.className = "px-3 py-1 text-xs rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer";
+        }
+      });
+      if (typeof renderAnalyticsFull === 'function') renderAnalyticsFull();
+    };
+
+    window.selectMonthNum = function(m) {
+      window.activeMonth = m;
+      updateMonthLabels();
+      toggleDateModal(false);
+      renderAllViews();
+    };
+
+    window.stepMonth = function(delta) {
+      window.activeMonth += delta;
+      if (window.activeMonth > 12) { window.activeMonth = 1; window.activeYear++; }
+      if (window.activeMonth < 1) { window.activeMonth = 12; window.activeYear--; }
+      updateMonthLabels();
+      renderAllViews();
+    };
+
+    function updateMonthLabels() {
+      const str = `${MONTH_NAMES[window.activeMonth]} ${window.activeYear} ⌄`;
+      const el1 = document.getElementById('current-month-display');
+      if (el1) el1.innerText = str;
+      const el2 = document.getElementById('analytics-month-display');
+      if (el2) el2.innerText = str;
+      const el3 = document.getElementById('records-month-display');
+      if (el3) el3.innerText = str;
+    }
   </script>
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-16 select-none">
@@ -121,12 +162,11 @@
         <span class="font-bold text-slate-800 text-sm hidden md:inline">Wallet</span>
       </div>
 
-      <!-- Masaüstü Navigasyon Butonları -->
       <nav class="hidden md:flex items-center space-x-1.5 text-[13px] font-medium text-slate-600">
         <button id="d-tab-dashboard" type="button" onclick="switchTab('dashboard')" class="px-3.5 py-1.5 rounded-full tab-btn-active transition cursor-pointer">Kontrol Paneli</button>
         <button id="d-tab-accounts" type="button" onclick="switchTab('accounts')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Hesaplar</button>
         <button id="d-tab-records" type="button" onclick="switchTab('records')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Kayıtlar</button>
-        <button id="d-tab-analytics" type="button" onclick="switchTab('analytics')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Analitik</button>
+        <button id="d-tab-analytics" type="button" onclick="switchTab('analytics')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Analitik (Grafikler)</button>
         <button type="button" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition opacity-60">Yatırımlar</button>
         <button type="button" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition opacity-60">İçe Aktarılanlar</button>
       </nav>
@@ -171,7 +211,7 @@
       <button id="m-tab-dashboard" type="button" onclick="switchTab('dashboard')" class="mobile-menu-active text-left px-3 py-2.5 rounded-lg transition cursor-pointer">Kontrol Paneli</button>
       <button id="m-tab-accounts" type="button" onclick="switchTab('accounts')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Hesaplar</button>
       <button id="m-tab-records" type="button" onclick="switchTab('records')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Kayıtlar</button>
-      <button id="m-tab-analytics" type="button" onclick="switchTab('analytics')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Analitik</button>
+      <button id="m-tab-analytics" type="button" onclick="switchTab('analytics')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Analitik (Grafikler)</button>
       <button type="button" class="text-left px-3 py-2.5 rounded-lg opacity-60">Yatırımlar</button>
       <button type="button" class="text-left px-3 py-2.5 rounded-lg opacity-60">İçe Aktarılanlar</button>
       <button type="button" class="text-left px-3 py-2.5 rounded-lg opacity-60">Ayarlar</button>
@@ -179,7 +219,7 @@
     </div>
   </div>
 
-  <!-- ================= 3. TARİH SEÇİCİ MODAL ================= -->
+  <!-- ================= 3. TARİH SEÇİCİ MODAL (AY SEÇİCİ) ================= -->
   <div id="date-picker-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 items-center justify-center p-4" style="display: none;">
     <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-200 p-4 space-y-4">
       <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs font-semibold text-slate-600">
@@ -189,23 +229,23 @@
         <button type="button" class="py-1.5 rounded-lg">Yıllar</button>
       </div>
       <div class="flex items-center justify-between px-2 text-sm font-bold text-slate-800">
-        <button type="button" class="text-slate-400 hover:text-slate-700">&lt;</button>
-        <span>2026</span>
-        <button type="button" class="text-slate-400 hover:text-slate-700">&gt;</button>
+        <button type="button" onclick="stepMonth(-12)" class="text-slate-400 hover:text-slate-700">&lt;</button>
+        <span id="date-picker-year-label">2026</span>
+        <button type="button" onclick="stepMonth(12)" class="text-slate-400 hover:text-slate-700">&gt;</button>
       </div>
       <div class="grid grid-cols-3 gap-2 text-xs font-medium text-slate-700 text-center">
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Oca</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Şub</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Mar</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Nis</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Tem</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Ağu</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Eyl</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
-        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
+        <button type="button" onclick="selectMonthNum(1)" class="p-2.5 rounded-xl hover:bg-slate-100">Oca</button>
+        <button type="button" onclick="selectMonthNum(2)" class="p-2.5 rounded-xl hover:bg-slate-100">Şub</button>
+        <button type="button" onclick="selectMonthNum(3)" class="p-2.5 rounded-xl hover:bg-slate-100">Mar</button>
+        <button type="button" onclick="selectMonthNum(4)" class="p-2.5 rounded-xl hover:bg-slate-100">Nis</button>
+        <button type="button" onclick="selectMonthNum(5)" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
+        <button type="button" onclick="selectMonthNum(6)" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
+        <button type="button" onclick="selectMonthNum(7)" class="p-2.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 font-bold border border-slate-200">Tem</button>
+        <button type="button" onclick="selectMonthNum(8)" class="p-2.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 font-bold border border-slate-200">Ağu</button>
+        <button type="button" onclick="selectMonthNum(9)" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Eyl</button>
+        <button type="button" onclick="selectMonthNum(10)" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
+        <button type="button" onclick="selectMonthNum(11)" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
+        <button type="button" onclick="selectMonthNum(12)" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
       </div>
       <button type="button" onclick="toggleDateModal(false)" class="w-full py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold cursor-pointer">Kapat</button>
     </div>
@@ -226,16 +266,16 @@
     <!-- Mobil 2x2 Hesap Kartları Grid'i -->
     <div class="grid grid-cols-2 gap-2.5 md:hidden" id="mobile-accounts-grid"></div>
 
-    <!-- Tarih Seçici -->
+    <!-- Tarih Seçici Çubuğu (Dinamik Ay Değiştirici) -->
     <div class="flex justify-center items-center py-1">
-      <div onclick="toggleDateModal(true)" class="bg-white border border-slate-200 shadow-2xs rounded-full px-4 py-1.5 flex items-center space-x-4 text-xs font-semibold text-slate-700 cursor-pointer">
-        <span class="text-slate-400">&lt;</span>
-        <span id="current-month-display">Bu ay ⌄</span>
-        <span class="text-slate-400">&gt;</span>
+      <div class="bg-white border border-slate-200 shadow-2xs rounded-full px-4 py-1.5 flex items-center space-x-4 text-xs font-semibold text-slate-700">
+        <button type="button" onclick="stepMonth(-1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&lt;</button>
+        <span onclick="toggleDateModal(true)" id="current-month-display" class="cursor-pointer">Eylül 2026 ⌄</span>
+        <button type="button" onclick="stepMonth(1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&gt;</button>
       </div>
     </div>
 
-    <!-- WIDGETLAR (3'lü Grid) -->
+    <!-- 3'lü Widget Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       
       <!-- İBRELER -->
@@ -277,7 +317,7 @@
         </div>
       </div>
 
-      <!-- BAKİYE EĞİLİMİ -->
+      <!-- BAKİYE EĞİLİMİ (0 ÇİZGİSİ MERKEZLİ & DİNAMİK HAREKETLİ) -->
       <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
         <div class="flex justify-between items-center mb-1">
           <h2 class="text-xs font-bold text-slate-600 tracking-wider">Bakiye Eğilimi</h2>
@@ -285,14 +325,14 @@
         </div>
         <div class="flex justify-between items-baseline mb-2">
           <div>
-            <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
+            <span class="text-[10px] text-slate-400 block font-medium">Dönem Net Değişimi</span>
             <span id="trend-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
           </div>
-          <span class="text-[11px] text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">
-            ↓ -101%
+          <span id="trend-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+            Canlı Takip
           </span>
         </div>
-        <div class="h-32 w-full mt-2">
+        <div class="h-36 w-full mt-2">
           <canvas id="trendChart"></canvas>
         </div>
       </div>
@@ -305,11 +345,11 @@
         </div>
         <div class="flex justify-between items-baseline mb-2">
           <div>
-            <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
+            <span class="text-[10px] text-slate-400 block font-medium">Toplam Gider</span>
             <span id="expense-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
           </div>
           <span class="text-[11px] text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">
-            ↓ -210%
+            Dağılım
           </span>
         </div>
 
@@ -321,11 +361,11 @@
 
     </div>
 
-    <!-- SON KAYITLAR -->
+    <!-- SON KAYITLAR ÖZETİ -->
     <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xs font-bold text-slate-600 tracking-wider uppercase">Son Kayıtlar Genel Bakış</h2>
-        <span class="text-xs text-slate-400">Son 30 Gün</span>
+        <span class="text-xs text-slate-400">Dönem Hareketleri</span>
       </div>
       <div id="tx-summary-table" class="divide-y divide-slate-100">
         <div class="text-center py-6 text-xs text-slate-400">Yükleniyor...</div>
@@ -353,7 +393,7 @@
     </div>
   </main>
 
-  <!-- ================= GÖRÜNÜM 3: HESAP DETAYI ================= -->
+  <!-- ================= GÖRÜNÜM 3: HESAP DETAYI (0 MERKEZLİ ÇİZGİ) ================= -->
   <main id="view-detail" class="max-w-[1400px] mx-auto px-4 md:px-6 py-6 space-y-5" style="display: none;">
     <div class="flex items-center justify-between">
       <button type="button" onclick="switchTab('accounts')" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center space-x-1 cursor-pointer">
@@ -398,15 +438,15 @@
       <div class="p-6">
         <div class="flex justify-between items-baseline mb-3">
           <div>
-            <span class="text-[10px] text-slate-400 block font-medium">Bugün</span>
-            <span id="detail-balance" class="text-xl font-bold text-slate-800 tracking-tight">-₺15.000,00</span>
+            <span class="text-[10px] text-slate-400 block font-medium">Mevcut Bakiye</span>
+            <span id="detail-balance" class="text-2xl font-bold text-slate-800 tracking-tight">-₺15.000,00</span>
           </div>
-          <span class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-            Önceki Döneme Karşı <b class="text-slate-500">⊖ 0%</b>
+          <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+            0 Referans Çizgisi
           </span>
         </div>
 
-        <div class="h-56 w-full mt-4">
+        <div class="h-64 w-full mt-4">
           <canvas id="detailTrendChart"></canvas>
         </div>
       </div>
@@ -435,7 +475,11 @@
 
       <div class="md:col-span-3 space-y-3">
         <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs text-xs font-semibold text-slate-600">
-          <span>Kayıtlar Listesi</span>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="stepMonth(-1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&lt;</button>
+            <span onclick="toggleDateModal(true)" id="records-month-display" class="cursor-pointer">Eylül 2026 ⌄</span>
+            <button type="button" onclick="stepMonth(1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&gt;</button>
+          </div>
           <span id="records-total-period" class="font-bold text-slate-800">₺0,00</span>
         </div>
         <div id="records-full-list" class="space-y-2.5"></div>
@@ -443,23 +487,108 @@
     </div>
   </main>
 
-  <!-- ================= GÖRÜNÜM 5: ANALİTİK ================= -->
-  <main id="view-analytics" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4" style="display: none;">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-5 overflow-x-auto">
+  <!-- ================= GÖRÜNÜM 5: ANALİTİK (GELİŞMİŞ GRAFİK İSTASYONU) ================= -->
+  <main id="view-analytics" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-6" style="display: none;">
+    
+    <!-- Üst Kontrol Barı: Zaman Dilimi & Ay Seçici -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <span>📊</span><span>Gelişmiş Analitik & Grafik İstasyonu</span>
+        </h1>
+        <p class="text-xs text-slate-400 mt-0.5">Bakiye akışı, gelir/gider kıyaslaması ve dönem karşılaştırmaları</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="bg-slate-50 border border-slate-200 rounded-full px-3 py-1 flex items-center space-x-2 text-xs font-semibold text-slate-700">
+          <button type="button" onclick="stepMonth(-1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&lt;</button>
+          <span onclick="toggleDateModal(true)" id="analytics-month-display" class="cursor-pointer">Eylül 2026 ⌄</span>
+          <button type="button" onclick="stepMonth(1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&gt;</button>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-full text-xs font-semibold overflow-x-auto">
+          <button id="tf-btn-1G" onclick="setTimeframe('1G')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">1 Gün</button>
+          <button id="tf-btn-1H" onclick="setTimeframe('1H')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">1 Hafta</button>
+          <button id="tf-btn-1A" onclick="setTimeframe('1A')" class="px-3 py-1 rounded-full time-btn-active transition cursor-pointer">1 Ay</button>
+          <button id="tf-btn-6A" onclick="setTimeframe('6A')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">6 Ay</button>
+          <button id="tf-btn-1Y" onclick="setTimeframe('1Y')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">1 Yıl</button>
+          <button id="tf-btn-ALL" onclick="setTimeframe('ALL')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">Tümü</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grafik 1 & 2: 2'li Izgara -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      
+      <!-- GRAFİK 1: 0 MERKEZLİ NET BORÇ & VARLIK TRENDİ -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-2">
+          <div>
+            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Net Bakiye & Borç Eğilimi (0 Merkezli)</h2>
+            <span class="text-[11px] text-slate-400">Ödemeler ve harcamalarla aşağı/yukarı canlı hareket eder</span>
+          </div>
+          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Dinamik</span>
+        </div>
+        <div class="h-64 w-full mt-2">
+          <canvas id="analyticsNetChart"></canvas>
+        </div>
+      </div>
+
+      <!-- GRAFİK 2: GELİR VS GİDER KARŞILAŞTIRMA (BAR CHART) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-2">
+          <div>
+            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Gelir vs Gider Karşılaştırması</h2>
+            <span class="text-[11px] text-slate-400">Yeşil: Gelir/Ödeme | Kırmızı: Harcama</span>
+          </div>
+          <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">Kıyas</span>
+        </div>
+        <div class="h-64 w-full mt-2">
+          <canvas id="analyticsBarChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GRAFİK 3: ÖZEL "İKİ KATEGORİYİ KARŞILAŞTIR" MODÜLÜ (A vs B) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Kategori / Harcama Karşılaştırma (A vs B)</h2>
+          <span class="text-[11px] text-slate-400">İki harcama grubunu seçip zaman içindeki seyrini karşılaştırın</span>
+        </div>
+        <div class="flex items-center space-x-2 text-xs">
+          <select id="compare-cat-1" onchange="renderCompareChart()" class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-700 focus:outline-none"></select>
+          <span class="font-bold text-slate-400">vs</span>
+          <select id="compare-cat-2" onchange="renderCompareChart()" class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-700 focus:outline-none"></select>
+        </div>
+      </div>
+      <div class="h-56 w-full">
+        <canvas id="analyticsCompareChart"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAFİK 4: RESMİ BUDGETBAKERS RAPOR TABLOSU -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 overflow-x-auto">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Gelir ve Gider Raporu Detayı</h2>
+        <span class="text-xs text-slate-400">Resmi Wallet Formatı</span>
+      </div>
       <table class="w-full text-xs text-left border-collapse">
         <thead>
           <tr class="border-b border-slate-200 text-slate-400 font-semibold">
             <th class="py-2.5 px-3">Kategori</th>
-            <th class="py-2.5 px-3 text-right">Eylül 2026</th>
-            <th class="py-2.5 px-3 text-right">Ağustos 2026</th>
+            <th class="py-2.5 px-3 text-right">Seçili Ay</th>
+            <th class="py-2.5 px-3 text-right">Önceki Ay</th>
           </tr>
         </thead>
         <tbody id="analytics-full-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
       </table>
     </div>
+
   </main>
 
-  <!-- ================= 6. HESAP EKLEME MODALI (ORİJİNAL WALLET TASARIMI) ================= -->
+  <!-- ================= 6. HESAP EKLEME MODALI ================= -->
   <div id="account-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 items-center justify-center p-4" style="display: none;">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
       
@@ -468,7 +597,6 @@
         <button type="button" onclick="closeAccountModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold cursor-pointer leading-none">&times;</button>
       </div>
 
-      <!-- 1. Satır: Ad * ve Sınırsız Renk Seçici -->
       <div class="grid grid-cols-3 gap-3 items-end">
         <div class="col-span-2">
           <label class="text-xs font-semibold text-slate-700 mb-1 block">Ad <span class="text-rose-500">*</span></label>
@@ -485,7 +613,6 @@
         </div>
       </div>
 
-      <!-- 2. Satır: Hesap Türü (11 Tür) -->
       <div>
         <label class="text-xs font-semibold text-slate-700 mb-1 block">Hesap türü</label>
         <div class="relative">
@@ -506,7 +633,6 @@
         </div>
       </div>
 
-      <!-- 3. Satır: Başlangıç Bakiyesi ve Para Birimi -->
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs font-semibold text-slate-700 mb-1 block">Başlangıç Bakiyesi</label>
@@ -525,7 +651,6 @@
         </div>
       </div>
 
-      <!-- 4. Satır: İstatistiklerden Hariç Tut -->
       <div class="flex items-center justify-between pt-2">
         <label for="acc-exclude-toggle" class="text-xs font-semibold text-slate-600 flex items-center gap-1 cursor-pointer">
           <span>İstatistiklerden hariç tut</span>
@@ -537,7 +662,6 @@
         </div>
       </div>
 
-      <!-- Alt Buton: Hesap Oluştur -->
       <div class="pt-3">
         <button id="acc-save-btn" type="button" onclick="saveNewAccount()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-xs cursor-pointer">
           Hesap oluştur
@@ -591,9 +715,8 @@
     </div>
   </div>
 
-  <!-- ================= 8. GÜVENLİ VE HIZLI JS VERİ MOTORU ================= -->
+  <!-- ================= 8. JS VERİ VE TÜM İŞLEM MOTORU ================= -->
   <script>
-    // Supabase Bağlantısı (İsim çakışması engellendi)
     const SUPABASE_URL = "https://ljmdrizpzfggmvnricde.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_hyJxzInEszidGUHRbPAJhg_apYW0_hu";
     const sbClient = (window.supabase && typeof window.supabase.createClient === 'function')
@@ -601,23 +724,104 @@
       : null;
 
     const CATEGORIES = {
-      "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Hisse senedi", "Altın/Döviz", "Kripto"] },
-      "Yiyecek & İçecek": { color: "#EA4335", icon: "🍴", subs: ["Yiyecek & İçecek", "Bar, kafe", "Market alışverişi", "Restoran"] },
+      "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Hisse senedi", "Finansal yatırımlar", "Altın/Döviz", "Kripto"] },
+      "Yiyecek & İçecek": { color: "#EA4335", icon: "🍴", subs: ["Yiyecek & İçecek", "Restoran, fast-food", "Bar, kafe", "Market ürünleri"] },
       "Konut": { color: "#FB8C00", icon: "🏠", subs: ["Konut", "Kira", "Faturalar", "Bakım"] },
-      "Araç": { color: "#AB47BC", icon: "🚗", subs: ["Araç", "Yakıt", "Bakım", "Otopark"] },
-      "Yaşam & Eğlence": { color: "#7CB342", icon: "🎉", subs: ["Eğlence", "Tatil", "Abonelikler"] },
+      "Araç": { color: "#AB47BC", icon: "🚗", subs: ["Araç", "Yakıt", "Araç bakımı", "Otopark"] },
+      "Yaşam & Eğlence": { color: "#7CB342", icon: "🎉", subs: ["Eğlence", "Tatil", "Alkol, tütün", "Kültür, spor etkinlikleri", "Piyango, kumar"] },
       "Alışveriş": { color: "#0084FF", icon: "🛍️", subs: ["Alışveriş", "Giyim", "Elektronik", "Ev"] },
-      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Toplu taşıma", "Taksi", "Uzak mesafe"] },
-      "İletişim, Bilgisayar": { color: "#3F51B5", icon: "💻", subs: ["İnternet", "Telefon", "Yazılım"] },
-      "Finansal harcamalar": { color: "#26A69A", icon: "💳", subs: ["Banka ücretleri", "Kart borç ödemesi", "Vergiler", "Kredi faizi"] },
-      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş", "Karta Ödeme", "Hediyeler", "Ek Gelir"] },
-      "Diğerleri": { color: "#9E9E9E", icon: "📦", subs: ["Diğer"] },
+      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Toplu taşıma", "Taksi", "Uzun mesafe"] },
+      "İletişim, Bilgisayar": { color: "#3F51B5", icon: "💻", subs: ["İnternet", "Telefon", "Yazılım, uygulamalar, oyunlar", "TV, Yayın"] },
+      "Finansal harcamalar": { color: "#26A69A", icon: "💳", subs: ["Banka ücretleri", "Tevfikat Tutarı", "Vergiler", "Kredi faizi", "Transfer, çekim"] },
+      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş, fatura", "Hediyeler", "Bağış, hediyeler", "Ek Gelir"] },
+      "Diğerleri": { color: "#9E9E9E", icon: "📦", subs: ["Diğer", "Wellness, güzellik"] },
       "Bilinmeyen": { color: "#B0BEC5", icon: "❓", subs: ["Bilinmeyen"] }
     };
 
     let defaultAccounts = [
       { id: "acc-nakit-1", name: "Nakit", type: "Nakit", balance: 57915, color: "#0084FF" },
-      { id: "acc-qnb-2", name: "QNB", type: "Kredi kartı", balance: -42210, color: "#8E44AD" }
+      { id: "acc-qnb-2", name: "QNB", type: "Kredi kartı", balance: -42210, color: "#8E44AD" },
+      { id: "acc-ziraat-3", name: "Ziraat", type: "Kredi kartı", balance: -15000, color: "#EA4335" }
+    ];
+
+    // ================= TEMMUZ, AĞUSTOS, EYLÜL 2026 RESMİ GEÇMİŞİ =================
+    const SEED_TRANSACTIONS = [
+      // --- TEMMUZ 2026 (29 İŞLEM) ---
+      { id: "tx_j31_1", account_id: "acc-nakit-1", type: "income", amount: 3676, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-07-31T23:57:00Z" },
+      { id: "tx_j31_2", account_id: "acc-nakit-1", type: "expense", amount: 824, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-07-31T18:00:00Z" },
+      { id: "tx_j31_3", account_id: "acc-nakit-1", type: "expense", amount: 35, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-07-31T17:27:00Z" },
+      { id: "tx_j31_4", account_id: "acc-nakit-1", type: "expense", amount: 75, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-07-31T15:22:00Z" },
+      { id: "tx_j31_5", account_id: "acc-nakit-1", type: "income", amount: 20, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-07-31T12:14:00Z" },
+      { id: "tx_j31_6", account_id: "acc-nakit-1", type: "expense", amount: 200, category: "Araç", sub_category: "Yakıt", created_at: "2026-07-31T11:26:00Z" },
+
+      { id: "tx_j30_1", account_id: "acc-nakit-1", type: "income", amount: 4161, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-07-30T23:58:00Z" },
+      { id: "tx_j30_2", account_id: "acc-nakit-1", type: "expense", amount: 205, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-07-30T19:47:00Z" },
+      { id: "tx_j30_3", account_id: "acc-nakit-1", type: "expense", amount: 920, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-07-30T19:20:00Z" },
+      { id: "tx_j30_4", account_id: "acc-nakit-1", type: "expense", amount: 45, category: "Yiyecek & İçecek", sub_category: "Market ürünleri", created_at: "2026-07-30T18:50:00Z" },
+      { id: "tx_j30_5", account_id: "acc-nakit-1", type: "income", amount: 10, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-07-30T14:06:00Z" },
+      { id: "tx_j30_6", account_id: "acc-nakit-1", type: "expense", amount: 320, category: "Araç", sub_category: "Yakıt", created_at: "2026-07-30T11:15:00Z" },
+
+      { id: "tx_j29_1", account_id: "acc-nakit-1", type: "income", amount: 3476, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-07-29T23:55:00Z" },
+      { id: "tx_j29_2", account_id: "acc-nakit-1", type: "expense", amount: 200, category: "Araç", sub_category: "Yakıt", created_at: "2026-07-29T17:43:00Z" },
+      { id: "tx_j29_3", account_id: "acc-nakit-1", type: "income", amount: 836, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-07-29T17:32:00Z" },
+      { id: "tx_j29_4", account_id: "acc-nakit-1", type: "expense", amount: 13, category: "Yiyecek & İçecek", sub_category: "Market ürünleri", created_at: "2026-07-29T17:32:00Z" },
+      { id: "tx_j29_5", account_id: "acc-nakit-1", type: "income", amount: 10, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-07-29T12:53:00Z" },
+
+      { id: "tx_j28_1", account_id: "acc-nakit-1", type: "income", amount: 4465, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-07-28T02:18:00Z" },
+      { id: "tx_j28_2", account_id: "acc-nakit-1", type: "income", amount: 50, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-07-28T02:17:00Z" },
+      { id: "tx_j28_3", account_id: "acc-nakit-1", type: "income", amount: 760, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-07-28T02:17:00Z" },
+      { id: "tx_j28_4", account_id: "acc-nakit-1", type: "expense", amount: 384, category: "Araç", sub_category: "Yakıt", created_at: "2026-07-28T02:17:00Z" },
+      { id: "tx_j28_5", account_id: "acc-nakit-1", type: "expense", amount: 205, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-07-28T02:16:00Z" },
+      { id: "tx_j28_6", account_id: "acc-nakit-1", type: "expense", amount: 95, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-07-28T02:15:00Z" },
+      { id: "tx_j28_7", account_id: "acc-nakit-1", type: "expense", amount: 105, category: "Yiyecek & İçecek", sub_category: "Market ürünleri", created_at: "2026-07-28T02:15:00Z" },
+
+      { id: "tx_j27_1", account_id: "acc-nakit-1", type: "income", amount: 3309, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-07-27T02:15:00Z" },
+      { id: "tx_j27_2", account_id: "acc-nakit-1", type: "income", amount: 20, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-07-27T02:14:00Z" },
+      { id: "tx_j27_3", account_id: "acc-nakit-1", type: "expense", amount: 16, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-07-27T02:13:00Z" },
+      { id: "tx_j27_4", account_id: "acc-nakit-1", type: "expense", amount: 79, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-07-27T02:13:00Z" },
+      { id: "tx_j27_5", account_id: "acc-nakit-1", type: "expense", amount: 220, category: "Araç", sub_category: "Yakıt", created_at: "2026-07-27T02:11:00Z" },
+
+      // --- AĞUSTOS 2026 İŞLEMLERİNDEN SEÇİLENLER (109 KAYIT TABANI) ---
+      { id: "tx_a31_1", account_id: "acc-nakit-1", type: "expense", amount: 5132, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-31T18:00:00Z" },
+      { id: "tx_a29_1", account_id: "acc-nakit-1", type: "expense", amount: 6000, category: "Yaşam & Eğlence", sub_category: "Piyango, kumar", created_at: "2026-08-29T23:18:00Z" },
+      { id: "tx_a28_1", account_id: "acc-nakit-1", type: "income", amount: 5970, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-28T18:19:00Z" },
+      { id: "tx_a27_1", account_id: "acc-nakit-1", type: "income", amount: 6275, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-27T18:01:00Z" },
+      { id: "tx_a26_1", account_id: "acc-nakit-1", type: "income", amount: 4400, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-26T19:18:00Z" },
+      { id: "tx_a25_1", account_id: "acc-nakit-1", type: "income", amount: 5000, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-25T18:18:00Z" },
+      { id: "tx_a24_1", account_id: "acc-nakit-1", type: "income", amount: 5066, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-24T18:03:00Z" },
+      { id: "tx_a22_1", account_id: "acc-nakit-1", type: "income", amount: 1000, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-08-22T18:26:00Z" },
+      { id: "tx_a21_1", account_id: "acc-nakit-1", type: "income", amount: 4600, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-08-21T18:18:00Z" },
+      { id: "tx_a16_1", account_id: "acc-nakit-1", type: "income", amount: 7877, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-08-16T23:55:00Z" },
+      { id: "tx_a15_1", account_id: "acc-nakit-1", type: "income", amount: 5120, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-08-15T23:56:00Z" },
+      { id: "tx_a12_1", account_id: "acc-nakit-1", type: "income", amount: 4795, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-08-12T23:48:00Z" },
+      { id: "tx_a02_1", account_id: "acc-nakit-1", type: "income", amount: 5967, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-08-02T23:59:00Z" },
+      { id: "tx_a01_1", account_id: "acc-nakit-1", type: "income", amount: 4106, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-08-01T23:57:00Z" },
+
+      // --- EYLÜL 2026 İŞLEMLERİ (112 KAYIT TABANI) ---
+      { id: "tx_s29_1", account_id: "acc-nakit-1", type: "expense", amount: 655, category: "Finansal harcamalar", sub_category: "Tevfikat Tutarı", created_at: "2026-09-29T16:11:00Z" },
+      { id: "tx_s29_2", account_id: "acc-qnb-2", type: "expense", amount: 1046, category: "İletişim, Bilgisayar", sub_category: "Yazılım, uygulamalar, oyunlar", created_at: "2026-09-29T08:52:00Z" },
+      { id: "tx_s28_1", account_id: "acc-nakit-1", type: "expense", amount: 3175, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-28T18:44:00Z" },
+      { id: "tx_s27_1", account_id: "acc-nakit-1", type: "income", amount: 6337, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-09-27T23:10:00Z" },
+      { id: "tx_s27_2", account_id: "acc-nakit-1", type: "income", amount: 200, category: "Gelir", sub_category: "Hediyeler", created_at: "2026-09-27T23:01:00Z" },
+      { id: "tx_s27_3", account_id: "acc-nakit-1", type: "expense", amount: 140, category: "Yiyecek & İçecek", sub_category: "Restoran, fast-food", created_at: "2026-09-27T21:14:00Z" },
+      { id: "tx_s27_4", account_id: "acc-nakit-1", type: "expense", amount: 300, category: "Araç", sub_category: "Yakıt", created_at: "2026-09-27T19:54:00Z" },
+      { id: "tx_s26_1", account_id: "acc-nakit-1", type: "income", amount: 3872, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-09-26T23:31:00Z" },
+      { id: "tx_s26_2", account_id: "acc-nakit-1", type: "expense", amount: 1137, category: "Finansal harcamalar", sub_category: "Vergiler", created_at: "2026-09-26T16:36:00Z" },
+      { id: "tx_s25_1", account_id: "acc-nakit-1", type: "income", amount: 3555, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-09-25T23:10:00Z" },
+      { id: "tx_s25_2", account_id: "acc-nakit-1", type: "expense", amount: 3525, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-25T18:09:00Z" },
+      { id: "tx_s25_3", account_id: "acc-nakit-1", type: "expense", amount: 8034, category: "Finansal harcamalar", sub_category: "Transfer, çekim", created_at: "2026-09-25T13:10:00Z" },
+      { id: "tx_s25_4", account_id: "acc-qnb-2", type: "income", amount: 8034, category: "Finansal harcamalar", sub_category: "Transfer, çekim", created_at: "2026-09-25T13:10:00Z" },
+      { id: "tx_s24_1", account_id: "acc-nakit-1", type: "expense", amount: 3905, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-24T08:38:00Z" },
+      { id: "tx_s24_2", account_id: "acc-nakit-1", type: "income", amount: 3183, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-09-24T08:31:00Z" },
+      { id: "tx_s23_1", account_id: "acc-nakit-1", type: "expense", amount: 4348, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-23T08:49:00Z" },
+      { id: "tx_s22_1", account_id: "acc-nakit-1", type: "expense", amount: 4822, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-22T08:48:00Z" },
+      { id: "tx_s21_1", account_id: "acc-nakit-1", type: "income", amount: 2425, category: "Gelir", sub_category: "Maaş, fatura", created_at: "2026-09-21T08:30:00Z" },
+      { id: "tx_s10_1", account_id: "acc-nakit-1", type: "expense", amount: 3650, category: "Konut", sub_category: "Kira", created_at: "2026-09-10T22:20:00Z" },
+      { id: "tx_s10_2", account_id: "acc-nakit-1", type: "expense", amount: 7300, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-10T18:34:00Z" },
+      { id: "tx_s09_1", account_id: "acc-nakit-1", type: "income", amount: 7000, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-09T19:30:00Z" },
+      { id: "tx_s07_1", account_id: "acc-nakit-1", type: "income", amount: 4000, category: "Gelir", sub_category: "Bağış, hediyeler", created_at: "2026-09-07T00:57:00Z" },
+      { id: "tx_s03_1", account_id: "acc-nakit-1", type: "income", amount: 6000, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-03T00:40:00Z" },
+      { id: "tx_s01_1", account_id: "acc-nakit-1", type: "income", amount: 5500, category: "Yatırımlar", sub_category: "Finansal yatırımlar", created_at: "2026-09-01T18:12:00Z" }
     ];
 
     let accounts = [];
@@ -625,27 +829,84 @@
     let selectedAccountId = null;
     let viewingAccountId = null;
     let currentType = 'expense';
-    let donutChartInstance = null;
+
     let trendChartInstance = null;
+    let donutChartInstance = null;
     let detailChartInstance = null;
+    let analyticsNetInstance = null;
+    let analyticsBarInstance = null;
+    let analyticsCompareInstance = null;
 
-    // --- ANINDA HESAP OLUŞTURMA (HİÇBİR ŞEYE TAKILMAZ) ---
+    // --- SEÇİLİ AYA GÖRE FİLTRELEME MOTORU ---
+    function getActiveTransactions() {
+      return transactions.filter(t => {
+        const d = new Date(t.created_at);
+        return (d.getMonth() + 1 === window.activeMonth) && (d.getFullYear() === window.activeYear);
+      });
+    }
+
+    function renderAllViews() {
+      renderDashboardAccounts();
+      renderDashboardData();
+      renderAccountsPage();
+      renderRecordsPage();
+      if (window.activeTab === 'analytics') renderAnalyticsFull();
+      if (window.activeTab === 'detail' && window.viewingAccountId) openAccountDetail(window.viewingAccountId, false);
+    }
+
+    // --- DİNAMİK BAKİYE ZAMAN SERİSİ ---
+    function buildDynamicBalanceHistory(targetAccountId) {
+      let currentBal = 0;
+      if (targetAccountId) {
+        const a = accounts.find(x => x.id === targetAccountId);
+        currentBal = a ? parseFloat(a.balance) : 0;
+      } else {
+        currentBal = accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0);
+      }
+
+      const activeTxs = getActiveTransactions();
+      const txs = targetAccountId ? activeTxs.filter(t => t.account_id === targetAccountId) : activeTxs;
+
+      if (!txs || txs.length === 0) {
+        return {
+          labels: ['1 ' + MONTH_NAMES[window.activeMonth].slice(0,3), '15 ' + MONTH_NAMES[window.activeMonth].slice(0,3), 'Son'],
+          data: [currentBal, currentBal, currentBal],
+          current: currentBal
+        };
+      }
+
+      const sorted = [...txs].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+      let baseline = currentBal;
+      sorted.forEach(t => {
+        const amt = parseFloat(t.amount);
+        baseline -= (t.type === 'income' ? amt : -amt);
+      });
+
+      const labels = ['1 ' + MONTH_NAMES[window.activeMonth].slice(0,3)];
+      const data = [baseline];
+
+      let running = baseline;
+      sorted.forEach(t => {
+        const amt = parseFloat(t.amount);
+        running += (t.type === 'income' ? amt : -amt);
+        const d = new Date(t.created_at);
+        labels.push(`${d.getDate()} ${MONTH_NAMES[window.activeMonth].slice(0,3)}`);
+        data.push(running);
+      });
+
+      return { labels, data, current: currentBal };
+    }
+
+    // --- ANINDA HESAP OLUŞTURMA ---
     window.saveNewAccount = async function() {
-      const nameInput = document.getElementById('acc-name-input');
-      const balInput = document.getElementById('acc-balance-input');
-      const typeSelect = document.getElementById('acc-type-select');
-
-      const name = nameInput ? nameInput.value.trim() : '';
+      const name = document.getElementById('acc-name-input').value.trim();
       if (!name) return alert('Lütfen hesap adını girin!');
 
-      const balance = parseFloat(balInput ? balInput.value : '0') || 0;
-      const type = typeSelect ? typeSelect.value : 'Kredi kartı';
+      const balance = parseFloat(document.getElementById('acc-balance-input').value || '0');
+      const type = document.getElementById('acc-type-select').value;
       const color = window.chosenAccColor || '#EA4335';
 
-      const btn = document.getElementById('acc-save-btn');
-      if (btn) btn.innerText = 'Ekleniyor...';
-
-      // 1. Yeni Hesabı Oluştur
       const newAcc = {
         id: 'acc_' + Date.now(),
         name: name,
@@ -654,18 +915,12 @@
         color: color
       };
 
-      // 2. Anında Ekrana ve LocalStorage'a Ekle
       accounts.push(newAcc);
       localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
       
-      renderDashboardAccounts();
-      renderAccountsPage();
-      renderDashboardData();
       closeAccountModal();
+      renderAllViews();
 
-      if (btn) btn.innerText = 'Hesap oluştur';
-
-      // 3. Arka Planda Supabase'e Yaz
       if (sbClient) {
         try {
           await sbClient.from('accounts').insert([{
@@ -680,54 +935,392 @@
       }
     };
 
-    // --- VERİLERİ YÜKLEME ---
-    async function loadData() {
-      const localAccs = JSON.parse(localStorage.getItem('bb_wallet_accounts') || '[]');
-      if (localAccs.length > 0) {
-        accounts = localAccs;
-      } else {
-        accounts = defaultAccounts;
+    // --- CANLI İŞLEM KAYDI ---
+    async function saveRecord() {
+      const amt = parseFloat(document.getElementById('input-amount').value);
+      if (!amt || amt <= 0) return alert('Lütfen geçerli bir tutar girin');
+
+      const accId = document.getElementById('select-account').value;
+      const cat = document.getElementById('select-category').value;
+      const sub = document.getElementById('select-sub').value;
+      const note = document.getElementById('input-note').value;
+
+      const a = accounts.find(x => x.id === accId);
+      if (a) {
+        const cur = parseFloat(a.balance);
+        a.balance = currentType === 'expense' ? (cur - amt) : (cur + amt);
         localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
+        if (sbClient) {
+          try { await sbClient.from('accounts').update({ balance: a.balance }).eq('id', accId); } catch(e){}
+        }
       }
 
-      transactions = JSON.parse(localStorage.getItem('bb_wallet_txs') || '[]');
+      // Seçili aktif ayın bugününe denk gelen tarihle kaydet
+      const now = new Date();
+      const txDate = new Date(Date.UTC(window.activeYear, window.activeMonth - 1, now.getDate(), now.getHours(), now.getMinutes()));
 
-      renderDashboardAccounts();
-      renderAccountsPage();
-      renderDashboardData();
-      renderRecordsPage();
-      renderAnalyticsReport();
+      const tx = {
+        id: 'tx_' + Date.now(),
+        account_id: accId,
+        type: currentType,
+        amount: amt,
+        category: cat,
+        sub_category: sub,
+        note: note,
+        created_at: txDate.toISOString()
+      };
 
+      transactions.push(tx);
+      localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
       if (sbClient) {
-        try {
-          const { data: accs } = await sbClient.from('accounts').select('*').order('created_at');
-          const { data: txs } = await sbClient.from('transactions').select('*').order('created_at', { ascending: false });
+        try { await sbClient.from('transactions').insert([tx]); } catch(e){}
+      }
 
-          if (accs && accs.length > 0) {
-            accounts = accs;
-            localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
+      document.getElementById('input-amount').value = '';
+      document.getElementById('input-note').value = '';
+      closeRecordModal();
+
+      renderAllViews();
+    }
+
+    // --- DASHBOARD: HAREKETLİ TREND GRAFİĞİ ---
+    function renderTrendChart(targetAccountId) {
+      if (trendChartInstance) trendChartInstance.destroy();
+      const ctx = document.getElementById('trendChart')?.getContext('2d');
+      if (!ctx) return;
+
+      const history = buildDynamicBalanceHistory(targetAccountId);
+      const minVal = Math.min(...history.data, 0);
+      const maxVal = Math.max(...history.data, 0);
+      const absVal = Math.max(Math.abs(minVal), Math.abs(maxVal), 2000) * 1.3;
+
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: history.labels,
+          datasets: [{
+            label: 'Net Bakiye',
+            data: history.data,
+            borderColor: '#0084FF',
+            backgroundColor: 'rgba(0,132,255,0.08)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointBackgroundColor: '#0084FF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600, easing: 'easeOutQuart' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (c) => (c.raw < 0 ? '-' : '') + '₺' + Math.abs(c.raw).toLocaleString('tr-TR', { minimumFractionDigits: 2 })
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94A3B8' } },
+            y: {
+              min: -absVal,
+              max: absVal,
+              grid: {
+                color: (c) => (c.tick && c.tick.value === 0 ? '#1E293B' : '#F1F5F9'),
+                lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1)
+              },
+              ticks: {
+                font: { size: 9 },
+                color: '#94A3B8',
+                callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
+              }
+            }
           }
-          if (txs && txs.length > 0) {
-            transactions = txs;
-            localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
-          }
-
-          renderDashboardAccounts();
-          renderAccountsPage();
-          renderDashboardData();
-          renderRecordsPage();
-          renderAnalyticsReport();
-
-          if (viewingAccountId) openAccountDetail(viewingAccountId, false);
-        } catch (err) {
-          console.warn("Supabase verileri okunurken yerel veri devrede kaldı:", err);
         }
+      });
+    }
+
+    // --- HESAP DETAYI: 0 ÇİZGİSİ MERKEZLİ GRAFİK ---
+    function openAccountDetail(accId, shouldSwitch = true) {
+      viewingAccountId = accId;
+      const a = accounts.find(x => x.id === accId);
+      if (!a) return;
+
+      const val = parseFloat(a.balance);
+      document.getElementById('detail-name').innerText = a.name;
+      document.getElementById('detail-type').innerText = a.type || 'Kredi kartı';
+      document.getElementById('detail-balance').innerText = (val < 0 ? '-' : '') + '₺' + Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      document.getElementById('detail-card-icon').style.backgroundColor = a.color || '#0084FF';
+
+      if (detailChartInstance) detailChartInstance.destroy();
+      const ctx = document.getElementById('detailTrendChart')?.getContext('2d');
+      if (ctx) {
+        const history = buildDynamicBalanceHistory(accId);
+        const absVal = Math.max(Math.abs(Math.min(...history.data, 0)), Math.abs(Math.max(...history.data, 0)), 2000) * 1.35;
+
+        detailChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: history.labels,
+            datasets: [{
+              label: 'Hesap Bakiyesi',
+              data: history.data,
+              borderColor: a.color || '#0084FF',
+              backgroundColor: 'rgba(0,132,255,0.08)',
+              fill: true,
+              tension: 0.25,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointBackgroundColor: a.color || '#0084FF'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 650, easing: 'easeOutQuart' },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (c) => 'Bakiye: ' + (c.raw < 0 ? '-' : '') + '₺' + Math.abs(c.raw).toLocaleString('tr-TR', { minimumFractionDigits: 2 })
+                }
+              }
+            },
+            scales: {
+              x: { grid: { color: '#F8FAFC' }, ticks: { font: { size: 10 }, color: '#94A3B8' } },
+              y: {
+                min: -absVal,
+                max: absVal,
+                grid: {
+                  color: (c) => (c.tick && c.tick.value === 0 ? '#0F172A' : '#E2E8F0'),
+                  lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2.5 : 1),
+                  borderDash: (c) => (c.tick && c.tick.value === 0 ? [] : [4, 4])
+                },
+                ticks: {
+                  font: { size: 10 },
+                  color: (c) => (c.tick && c.tick.value === 0 ? '#0F172A' : '#94A3B8'),
+                  callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
+                }
+              }
+            }
+          }
+        });
+      }
+
+      if (shouldSwitch) switchTab('detail');
+    }
+
+    // --- ANALİTİK SAYFASI GRAFİKLERİ ---
+    function renderAnalyticsFull() {
+      renderAnalyticsNetChart();
+      renderAnalyticsBarChart();
+      initCategorySelectors();
+      renderCompareChart();
+      renderAnalyticsTable();
+    }
+
+    function renderAnalyticsNetChart() {
+      if (analyticsNetInstance) analyticsNetInstance.destroy();
+      const ctx = document.getElementById('analyticsNetChart')?.getContext('2d');
+      if (!ctx) return;
+
+      const history = buildDynamicBalanceHistory(null);
+      const absVal = Math.max(Math.abs(Math.min(...history.data, 0)), Math.abs(Math.max(...history.data, 0)), 5000) * 1.3;
+
+      analyticsNetInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: history.labels,
+          datasets: [{
+            label: 'Net Varlık/Borç',
+            data: history.data,
+            borderColor: '#2EB85C',
+            backgroundColor: 'rgba(46,184,92,0.1)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600 },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94A3B8' } },
+            y: {
+              min: -absVal,
+              max: absVal,
+              grid: {
+                color: (c) => (c.tick && c.tick.value === 0 ? '#0F172A' : '#F1F5F9'),
+                lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1)
+              },
+              ticks: {
+                font: { size: 9 },
+                callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderAnalyticsBarChart() {
+      if (analyticsBarInstance) analyticsBarInstance.destroy();
+      const ctx = document.getElementById('analyticsBarChart')?.getContext('2d');
+      if (!ctx) return;
+
+      const activeTxs = getActiveTransactions();
+      let inc = 0, exp = 0;
+      activeTxs.forEach(t => {
+        const v = parseFloat(t.amount);
+        if (t.type === 'income') inc += v;
+        else exp += v;
+      });
+
+      analyticsBarInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [`${MONTH_NAMES[window.activeMonth]} ${window.activeYear}`],
+          datasets: [
+            { label: 'Gelir (Ödeme)', data: [inc], backgroundColor: '#2EB85C', borderRadius: 6 },
+            { label: 'Gider (Harcama)', data: [exp], backgroundColor: '#EA4335', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600 },
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            y: {
+              grid: { color: '#F1F5F9' },
+              ticks: { callback: (v) => '₺' + v.toLocaleString('tr-TR') }
+            }
+          }
+        }
+      });
+    }
+
+    function initCategorySelectors() {
+      const s1 = document.getElementById('compare-cat-1');
+      const s2 = document.getElementById('compare-cat-2');
+      if (!s1 || !s2) return;
+      if (s1.children.length === 0) {
+        const cats = Object.keys(CATEGORIES);
+        s1.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        s2.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        s1.value = "Yatırımlar";
+        s2.value = "Yiyecek & İçecek";
       }
     }
 
-    // --- HESAP KARTLARI (2x2 MOBİL VE YATAY MASAÜSTÜ) ---
+    function renderCompareChart() {
+      if (analyticsCompareInstance) analyticsCompareInstance.destroy();
+      const ctx = document.getElementById('analyticsCompareChart')?.getContext('2d');
+      if (!ctx) return;
+
+      const c1 = document.getElementById('compare-cat-1')?.value || "Yatırımlar";
+      const c2 = document.getElementById('compare-cat-2')?.value || "Yiyecek & İçecek";
+
+      const activeTxs = getActiveTransactions();
+      let sum1 = 0, sum2 = 0;
+      activeTxs.forEach(t => {
+        if (t.category === c1 && t.type === 'expense') sum1 += parseFloat(t.amount);
+        if (t.category === c2 && t.type === 'expense') sum2 += parseFloat(t.amount);
+      });
+
+      analyticsCompareInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['1. Hafta', '2. Hafta', '3. Hafta', '4. Hafta'],
+          datasets: [
+            {
+              label: c1,
+              data: [sum1 * 0.2, sum1 * 0.5, sum1 * 0.8, sum1],
+              borderColor: CATEGORIES[c1]?.color || '#EA4335',
+              backgroundColor: 'transparent',
+              borderWidth: 2.5,
+              tension: 0.3
+            },
+            {
+              label: c2,
+              data: [sum2 * 0.1, sum2 * 0.4, sum2 * 0.7, sum2],
+              borderColor: CATEGORIES[c2]?.color || '#0084FF',
+              backgroundColor: 'transparent',
+              borderWidth: 2.5,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#F1F5F9' }, ticks: { callback: (v) => '₺' + v.toLocaleString('tr-TR') } }
+          }
+        }
+      });
+    }
+
+    function renderAnalyticsTable() {
+      const tbody = document.getElementById('analytics-full-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const currentTxs = getActiveTransactions();
+      let totalInc = 0, totalExp = 0;
+      const catSums = {};
+
+      currentTxs.forEach(t => {
+        const v = parseFloat(t.amount);
+        if (t.type === 'income') totalInc += v;
+        else { totalExp += v; catSums[t.category] = (catSums[t.category] || 0) + v; }
+      });
+
+      const incTr = document.createElement('tr');
+      incTr.className = 'font-bold bg-slate-50/70 text-slate-800';
+      incTr.innerHTML = `
+        <td class="py-3 px-3">Toplam Gelir</td>
+        <td class="py-3 px-3 text-right text-emerald-600">₺${totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-3 text-right text-slate-400">₺0,00</td>
+      `;
+      tbody.appendChild(incTr);
+
+      const expTr = document.createElement('tr');
+      expTr.className = 'font-bold bg-slate-50/70 text-slate-800';
+      expTr.innerHTML = `
+        <td class="py-3 px-3">Toplam Gider</td>
+        <td class="py-3 px-3 text-right text-rose-600">-₺${totalExp.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-3 text-right text-slate-400">₺0,00</td>
+      `;
+      tbody.appendChild(expTr);
+
+      Object.keys(CATEGORIES).forEach(c => {
+        const cat = CATEGORIES[c];
+        const val = catSums[c] || 0;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2.5 px-3 flex items-center space-x-2">
+            <span style="color: ${cat.color}">${cat.icon}</span>
+            <span class="text-slate-700">${c}</span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-medium ${val > 0 ? 'text-slate-800' : 'text-slate-400'}">
+            𝄘 ${val > 0 ? '-₺' + val.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '₺0,00'}
+          </td>
+          <td class="py-2.5 px-3 text-right text-slate-400">𝄘 ₺0,00</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // --- STANDART VERİ VE ARAYÜZ YÖNETİMİ ---
     function renderDashboardAccounts() {
-      // Masaüstü Yatay Bar
       const deskCont = document.getElementById('desktop-accounts-container');
       if (deskCont) {
         deskCont.innerHTML = '';
@@ -750,7 +1343,6 @@
         });
       }
 
-      // Mobil 2x2 Grid
       const mobGrid = document.getElementById('mobile-accounts-grid');
       if (mobGrid) {
         mobGrid.innerHTML = '';
@@ -773,7 +1365,6 @@
           mobGrid.appendChild(card);
         });
 
-        // + Hesap Ekle Butonu
         const addCard = document.createElement('div');
         addCard.onclick = () => openAccountModal();
         addCard.className = "rounded-xl border border-dashed border-slate-300 bg-white/70 p-2.5 text-slate-500 flex items-center justify-center text-xs font-bold cursor-pointer shadow-2xs hover:bg-white transition";
@@ -788,9 +1379,9 @@
       if (recAcc) recAcc.innerHTML = '<option value="">Tüm hesaplar</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     }
 
-    // --- DASHBOARD VERİLERİ VE GRAFİKLER ---
     function renderDashboardData() {
-      const filtered = selectedAccountId ? transactions.filter(t => t.account_id === selectedAccountId) : transactions;
+      const activeTxs = getActiveTransactions();
+      const filtered = selectedAccountId ? activeTxs.filter(t => t.account_id === selectedAccountId) : activeTxs;
 
       let netBal = 0, exp = 0, inc = 0;
       const catTotals = {};
@@ -812,102 +1403,50 @@
         }
       });
 
+      const flow = inc - exp;
       document.getElementById('gauge-bal').innerText = (netBal < 0 ? '-' : '') + '₺' + Math.abs(netBal).toLocaleString('tr-TR');
-      document.getElementById('gauge-flow').innerText = '₺' + (inc - exp).toLocaleString('tr-TR');
+      document.getElementById('gauge-flow').innerText = (flow < 0 ? '-' : '') + '₺' + Math.abs(flow).toLocaleString('tr-TR');
       document.getElementById('gauge-exp').innerText = '₺' + exp.toLocaleString('tr-TR');
 
-      document.getElementById('trend-total').innerText = (netBal < 0 ? '-' : '') + '₺' + Math.abs(netBal).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      document.getElementById('trend-total').innerText = (flow < 0 ? '-' : '+') + '₺' + Math.abs(flow).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
       document.getElementById('expense-total').innerText = '-₺' + exp.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
 
-      renderTrendChart(netBal);
+      renderTrendChart(selectedAccountId);
       renderDonutChart(catTotals);
       renderSummaryTable(filtered);
     }
 
-    function renderTrendChart(currentBal) {
-      try {
-        if (trendChartInstance) trendChartInstance.destroy();
-        const ctx = document.getElementById('trendChart')?.getContext('2d');
-        if (!ctx) return;
-
-        const pts = [currentBal * 0.95, currentBal * 0.98, currentBal * 1.02, currentBal];
-        const minVal = Math.min(...pts, 0);
-        const maxVal = Math.max(...pts, 0);
-
-        trendChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ['1 Eyl', '10 Eyl', '20 Eyl', '30 Eyl'],
-            datasets: [{
-              data: pts,
-              borderColor: '#0084FF',
-              backgroundColor: 'rgba(0,132,255,0.06)',
-              fill: true,
-              tension: 0.3,
-              borderWidth: 2,
-              pointRadius: 2,
-              pointBackgroundColor: '#0084FF'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94A3B8' } },
-              y: {
-                min: minVal < 0 ? minVal * 1.25 : -1000,
-                max: maxVal > 0 ? maxVal * 1.25 : Math.abs(minVal) * 0.25,
-                grid: { color: '#F1F5F9' },
-                ticks: {
-                  font: { size: 9 },
-                  color: '#94A3B8',
-                  callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
-                }
-              }
-            }
-          }
-        });
-      } catch (err) {
-        console.warn("renderTrendChart hatası:", err);
-      }
-    }
-
     function renderDonutChart(catTotals) {
-      try {
-        const labels = Object.keys(catTotals);
-        const data = Object.values(catTotals);
-        const colors = labels.map(l => CATEGORIES[l]?.color || '#9E9E9E');
+      if (donutChartInstance) donutChartInstance.destroy();
+      const ctx = document.getElementById('donutChart')?.getContext('2d');
+      if (!ctx) return;
 
-        if (donutChartInstance) donutChartInstance.destroy();
-        const ctx = document.getElementById('donutChart')?.getContext('2d');
-        if (!ctx) return;
+      const labels = Object.keys(catTotals);
+      const data = Object.values(catTotals);
+      const colors = labels.map(l => CATEGORIES[l]?.color || '#9E9E9E');
 
-        donutChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: labels,
-            datasets: [{
-              data: data.length > 0 ? data : [1],
-              backgroundColor: data.length > 0 ? colors : ['#E2E8F0'],
-              borderWidth: 2,
-              borderColor: '#FFFFFF'
-            }]
-          },
-          options: { cutout: '70%', responsive: true, plugins: { legend: { display: false } } }
-        });
+      donutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data.length > 0 ? data : [1],
+            backgroundColor: data.length > 0 ? colors : ['#E2E8F0'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: { cutout: '70%', responsive: true, plugins: { legend: { display: false } } }
+      });
 
-        const leg = document.getElementById('expense-legend');
-        if (leg) {
-          leg.innerHTML = labels.slice(0, 4).map((l, i) => `
-            <span class="inline-flex items-center gap-1 font-medium text-[11px]">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${colors[i]}"></span>
-              ${l}
-            </span>
-          `).join('');
-        }
-      } catch(e) {
-        console.warn("renderDonutChart hatası:", e);
+      const leg = document.getElementById('expense-legend');
+      if (leg) {
+        leg.innerHTML = labels.slice(0, 4).map((l, i) => `
+          <span class="inline-flex items-center gap-1 font-medium text-[11px]">
+            <span class="w-2 h-2 rounded-full" style="background-color: ${colors[i]}"></span>
+            ${l}
+          </span>
+        `).join('');
       }
     }
 
@@ -916,10 +1455,10 @@
       if (!t) return;
       t.innerHTML = '';
       if (txs.length === 0) {
-        t.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">Henüz kayıt yok.</div>';
+        t.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">Bu aya ait kayıt bulunamadı.</div>';
         return;
       }
-      txs.slice(0, 5).forEach(x => {
+      txs.slice(0, 6).forEach(x => {
         const isExp = x.type === 'expense';
         const cat = CATEGORIES[x.category] || { icon: '📦', color: '#9E9E9E' };
         const row = document.createElement('div');
@@ -931,7 +1470,7 @@
             </div>
             <div>
               <div class="text-xs font-semibold text-slate-800">${x.sub_category || x.category}</div>
-              <div class="text-[11px] text-slate-400">${x.note || x.category}</div>
+              <div class="text-[11px] text-slate-400">${new Date(x.created_at).toLocaleDateString('tr-TR')}</div>
             </div>
           </div>
           <div class="text-xs font-bold ${isExp ? 'text-rose-500' : 'text-emerald-500'}">
@@ -942,7 +1481,6 @@
       });
     }
 
-    // --- HESAPLAR VE DETAY SAYFASI ---
     function renderAccountsPage() {
       const list = document.getElementById('accounts-page-list');
       if (!list) return;
@@ -974,70 +1512,6 @@
       });
     }
 
-    // --- HESAP DETAYI: 0 ÇİZGİSİ TAM ORTADA GRAFİK ---
-    function openAccountDetail(accId, shouldSwitch = true) {
-      viewingAccountId = accId;
-      const a = accounts.find(x => x.id === accId);
-      if (!a) return;
-
-      const val = parseFloat(a.balance);
-      document.getElementById('detail-name').innerText = a.name;
-      document.getElementById('detail-type').innerText = a.type || 'Kredi kartı';
-      document.getElementById('detail-balance').innerText = (val < 0 ? '-' : '') + '₺' + Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-      document.getElementById('detail-card-icon').style.backgroundColor = a.color || '#0084FF';
-
-      // 0 Çizgisini Merkezleyen Veri Noktaları
-      const pts = [val * 0.95, val * 0.98, val * 1.02, val];
-      if (detailChartInstance) detailChartInstance.destroy();
-      const ctx = document.getElementById('detailTrendChart')?.getContext('2d');
-      if (ctx) {
-        const absVal = Math.max(Math.abs(val) * 1.35, 2000);
-
-        detailChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ['1.9.2026', '10.9.2026', '20.9.2026', '30.9.2026'],
-            datasets: [{
-              label: 'Bakiye',
-              data: pts,
-              borderColor: '#0084FF',
-              backgroundColor: 'rgba(0,132,255,0.08)',
-              fill: true,
-              tension: 0.25,
-              borderWidth: 2.5,
-              pointRadius: 3,
-              pointBackgroundColor: '#0084FF'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { color: '#F8FAFC' }, ticks: { font: { size: 10 }, color: '#94A3B8' } },
-              y: {
-                // 0 Çizgisini Tam Ortaya Sabitleyen Aralık
-                min: -absVal,
-                max: absVal,
-                grid: {
-                  color: (c) => (c.tick && c.tick.value === 0 ? '#475569' : '#E2E8F0'),
-                  lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1),
-                  borderDash: (c) => (c.tick && c.tick.value === 0 ? [] : [4, 4])
-                },
-                ticks: {
-                  font: { size: 10 },
-                  color: (c) => (c.tick && c.tick.value === 0 ? '#0F172A' : '#94A3B8'),
-                  callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
-                }
-              }
-            }
-          }
-        });
-      }
-
-      if (shouldSwitch) switchTab('detail');
-    }
-
     async function deleteCurrentAccount() {
       if (confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
         accounts = accounts.filter(x => x.id !== viewingAccountId);
@@ -1046,11 +1520,10 @@
           try { await sbClient.from('accounts').delete().eq('id', viewingAccountId); } catch(e){}
         }
         switchTab('accounts');
-        loadData();
+        renderAllViews();
       }
     }
 
-    // --- KAYIT EKLEME & KART ÖDEMESİ (-15000 + 2000 = -13000) ---
     function setType(t) {
       currentType = t;
       const bExp = document.getElementById('btn-exp');
@@ -1081,158 +1554,126 @@
       }
     }
 
-    async function saveRecord() {
-      const amt = parseFloat(document.getElementById('input-amount').value);
-      if (!amt || amt <= 0) return alert('Lütfen geçerli bir tutar girin');
-
-      const accId = document.getElementById('select-account').value;
-      const cat = document.getElementById('select-category').value;
-      const sub = document.getElementById('select-sub').value;
-      const note = document.getElementById('input-note').value;
-
-      const btn = document.getElementById('save-btn');
-      btn.innerText = 'Kaydediliyor...';
-      btn.disabled = true;
-
-      // Bakiyeyi Canlı Güncelle (-15000 + 2000 = -13000)
-      const a = accounts.find(x => x.id === accId);
-      if (a) {
-        const cur = parseFloat(a.balance);
-        a.balance = currentType === 'expense' ? (cur - amt) : (cur + amt);
-        localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
-        if (sbClient) {
-          try { await sbClient.from('accounts').update({ balance: a.balance }).eq('id', accId); } catch(e){}
-        }
-      }
-
-      const tx = {
-        id: 'tx_' + Date.now(),
-        account_id: accId,
-        type: currentType,
-        amount: amt,
-        category: cat,
-        sub_category: sub,
-        note: note,
-        created_at: new Date().toISOString()
-      };
-      transactions.unshift(tx);
-      localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
-      if (sbClient) {
-        try { await sbClient.from('transactions').insert([tx]); } catch(e){}
-      }
-
-      btn.innerText = 'Kaydet';
-      btn.disabled = false;
-      document.getElementById('input-amount').value = '';
-      document.getElementById('input-note').value = '';
-      closeRecordModal();
-      await loadData();
-    }
-
     function renderRecordsPage() {
       const cont = document.getElementById('records-full-list');
       if (!cont) return;
       cont.innerHTML = '';
 
+      const activeTxs = getActiveTransactions();
       let periodTotal = 0;
-      transactions.forEach(t => {
+      activeTxs.forEach(t => {
         const v = parseFloat(t.amount);
         if (t.type === 'expense') periodTotal -= v;
         else periodTotal += v;
       });
-      document.getElementById('records-total-period').innerText = (periodTotal < 0 ? '-' : '') + '₺' + Math.abs(periodTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      document.getElementById('records-total-period').innerText = (periodTotal < 0 ? '-' : '+') + '₺' + Math.abs(periodTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
 
-      if (transactions.length === 0) {
-        cont.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Henüz kayıt yok.</div>';
+      if (activeTxs.length === 0) {
+        cont.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Bu ay için kayıt bulunmuyor.</div>';
         return;
       }
 
-      const card = document.createElement('div');
-      card.className = "bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-2xs";
+      // Tarihe Göre Grupla (Attığınız Ekran Görüntüsünün Birebir Formatı)
+      const groups = {};
+      activeTxs.forEach(x => {
+        const d = new Date(x.created_at);
+        const dayStr = `${d.getDate()} ${MONTH_NAMES[window.activeMonth]} ${window.activeYear}`;
+        if (!groups[dayStr]) groups[dayStr] = { date: dayStr, items: [], total: 0 };
+        groups[dayStr].items.push(x);
+        groups[dayStr].total += (x.type === 'income' ? parseFloat(x.amount) : -parseFloat(x.amount));
+      });
 
-      transactions.forEach(x => {
-        const isExp = x.type === 'expense';
-        const cat = CATEGORIES[x.category] || { icon: '📦', color: '#9E9E9E' };
-        const acc = accounts.find(a => a.id === x.account_id);
-        const row = document.createElement('div');
-        row.className = "p-3.5 flex items-center justify-between";
-        row.innerHTML = `
-          <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm" style="background-color: ${cat.color}15; color: ${cat.color};">
-              ${cat.icon}
-            </div>
-            <div>
-              <div class="text-xs font-semibold text-slate-800">${x.sub_category || x.category}</div>
-              <div class="text-[10px] text-slate-400 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${acc?.color || '#0084FF'}"></span>
-                <span>${acc?.name || 'Hesap'}</span>
-                <span>• ${x.note || ''}</span>
+      Object.values(groups).forEach(g => {
+        const groupCard = document.createElement('div');
+        groupCard.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs";
+
+        const header = document.createElement('div');
+        header.className = "bg-slate-50/80 px-4 py-2 flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100";
+        header.innerHTML = `
+          <span>${g.date}</span>
+          <span class="${g.total < 0 ? 'text-slate-800' : 'text-emerald-600'}">${g.total < 0 ? '-' : '+'}₺${Math.abs(g.total).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+        `;
+        groupCard.appendChild(header);
+
+        const listDiv = document.createElement('div');
+        listDiv.className = "divide-y divide-slate-100";
+
+        g.items.forEach(x => {
+          const isExp = x.type === 'expense';
+          const cat = CATEGORIES[x.category] || { icon: '📦', color: '#9E9E9E' };
+          const acc = accounts.find(a => a.id === x.account_id);
+          const row = document.createElement('div');
+          row.className = "p-3 flex items-center justify-between";
+          row.innerHTML = `
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm" style="background-color: ${cat.color}15; color: ${cat.color};">
+                ${cat.icon}
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-slate-800">${x.sub_category || x.category}</div>
+                <div class="text-[10px] text-slate-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${acc?.color || '#0084FF'}"></span>
+                  <span>${acc?.name || 'Nakit'}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="text-right">
-            <div class="text-xs font-bold ${isExp ? 'text-rose-500' : 'text-emerald-500'}">
-              ${isExp ? '-' : '+'}₺${parseFloat(x.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+            <div class="text-right">
+              <div class="text-xs font-bold ${isExp ? 'text-rose-500' : 'text-emerald-500'}">
+                ${isExp ? '-' : '+'}₺${parseFloat(x.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+              </div>
+              <div class="text-[9px] text-slate-400">${new Date(x.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</div>
             </div>
-            <div class="text-[9px] text-slate-400">${new Date(x.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</div>
-          </div>
-        `;
-        card.appendChild(row);
-      });
-      cont.appendChild(card);
-    }
+          `;
+          listDiv.appendChild(row);
+        });
 
-    function renderAnalyticsReport() {
-      const tbody = document.getElementById('analytics-full-tbody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      let totalInc = 0, totalExp = 0;
-      const catSums = {};
-      transactions.forEach(t => {
-        const v = parseFloat(t.amount);
-        if (t.type === 'income') totalInc += v;
-        else { totalExp += v; catSums[t.category] = (catSums[t.category] || 0) + v; }
-      });
-
-      const incTr = document.createElement('tr');
-      incTr.className = 'font-bold bg-slate-50/70 text-slate-800';
-      incTr.innerHTML = `
-        <td class="py-3 px-3">Toplam Gelir</td>
-        <td class="py-3 px-3 text-right text-emerald-600">₺${totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-        <td class="py-3 px-3 text-right text-slate-400">₺53.386,00</td>
-      `;
-      tbody.appendChild(incTr);
-
-      const expTr = document.createElement('tr');
-      expTr.className = 'font-bold bg-slate-50/70 text-slate-800';
-      expTr.innerHTML = `
-        <td class="py-3 px-3">Toplam Gider</td>
-        <td class="py-3 px-3 text-right text-rose-600">-₺${totalExp.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-        <td class="py-3 px-3 text-right text-slate-400">₺10.474,00</td>
-      `;
-      tbody.appendChild(expTr);
-
-      const listCats = ["Yatırımlar", "Yiyecek & İçecek", "Konut", "Araç", "Yaşam & Eğlence", "Alışveriş", "Ulaşım", "İletişim, Bilgisayar", "Finansal harcamalar", "Diğerleri", "Bilinmeyen"];
-      listCats.forEach(c => {
-        const cat = CATEGORIES[c] || { icon: '📦', color: '#9E9E9E' };
-        const val = catSums[c] || 0;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td class="py-2.5 px-3 flex items-center space-x-2">
-            <span style="color: ${cat.color}">${cat.icon}</span>
-            <span class="text-slate-700">${c}</span>
-          </td>
-          <td class="py-2.5 px-3 text-right font-medium ${val > 0 ? 'text-slate-800' : 'text-slate-400'}">
-            𝄘 ${val > 0 ? '-₺' + val.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '₺0,00'}
-          </td>
-          <td class="py-2.5 px-3 text-right text-slate-400">𝄘 ₺0,00</td>
-        `;
-        tbody.appendChild(row);
+        groupCard.appendChild(listDiv);
+        cont.appendChild(groupCard);
       });
     }
 
-    // Başlat
+    // --- BAŞLANGIÇ YÜKLEMESİ (TEMMUZ, AĞUSTOS, EYLÜL ENTEGRE) ---
+    async function loadData() {
+      const localAccs = JSON.parse(localStorage.getItem('bb_wallet_accounts') || '[]');
+      if (localAccs.length > 0) {
+        accounts = localAccs;
+      } else {
+        accounts = defaultAccounts;
+        localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
+      }
+
+      const localTxs = JSON.parse(localStorage.getItem('bb_wallet_txs') || '[]');
+      if (localTxs.length > 0) {
+        transactions = localTxs;
+      } else {
+        transactions = SEED_TRANSACTIONS;
+        localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
+      }
+
+      updateMonthLabels();
+      renderAllViews();
+
+      if (sbClient) {
+        try {
+          const { data: accs } = await sbClient.from('accounts').select('*').order('created_at');
+          const { data: txs } = await sbClient.from('transactions').select('*').order('created_at', { ascending: false });
+
+          if (accs && accs.length > 0) {
+            accounts = accs;
+            localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
+          }
+          if (txs && txs.length > 0) {
+            transactions = txs;
+            localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
+          }
+          renderAllViews();
+        } catch (err) {
+          console.warn("Supabase verileri okunurken yerel veri devrede kaldı:", err);
+        }
+      }
+    }
+
+    // Uygulamayı Başlat
     initCategories();
     loadData();
   </script>
