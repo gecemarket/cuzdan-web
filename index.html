@@ -15,10 +15,12 @@
     .gauge-bg { stroke: #E2E8F0; }
     .tab-btn-active { background-color: #F1F5F9 !important; color: #0F172A !important; font-weight: 700 !important; border: 1px solid #CBD5E1 !important; }
     .mobile-menu-active { background-color: #D1E7DD !important; color: #0F5132 !important; font-weight: 700 !important; }
+    .toggle-checkbox:checked { right: 0; border-color: #2EB85C; }
+    .toggle-checkbox:checked + .toggle-label { background-color: #2EB85C; }
   </style>
 
   <script>
-    // --- KESİNTİSİZ SEKME YÖNETİCİSİ (HEM MASAÜSTÜ HEM MOBİL) ---
+    // --- KESİNTİSİZ SEKME YÖNETİCİSİ ---
     window.activeTab = 'dashboard';
     window.viewingAccountId = null;
 
@@ -96,7 +98,7 @@
         <span class="font-bold text-slate-800 text-sm hidden md:inline">Wallet</span>
       </div>
 
-      <!-- Masaüstü Navigasyon Butonları (Mobilde Gizli) -->
+      <!-- Masaüstü Navigasyon Butonları -->
       <nav class="hidden md:flex items-center space-x-1.5 text-[13px] font-medium text-slate-600">
         <button id="d-tab-dashboard" onclick="switchTab('dashboard')" class="px-3.5 py-1.5 rounded-full tab-btn-active transition cursor-pointer">Kontrol Paneli</button>
         <button id="d-tab-accounts" onclick="switchTab('accounts')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Hesaplar</button>
@@ -123,7 +125,7 @@
         <span>Mustafav2 ▾</span>
       </div>
 
-      <!-- Mobil Hamburger Menü (Masaüstünde Gizli) -->
+      <!-- Mobil Hamburger Menü -->
       <button onclick="toggleDrawer(true)" class="md:hidden p-1 text-slate-700 hover:text-black cursor-pointer">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -157,11 +159,11 @@
     </div>
   </div>
 
-  <!-- ================= 3. TARİH SEÇİCİ MODALI ================= -->
+  <!-- ================= 3. TARİH SEÇİCİ MODAL ================= -->
   <div id="date-picker-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-200 p-4 space-y-4">
       <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs font-semibold text-slate-600">
-        <button class="py-1.5 rounded-lg">Özel aralık</button>
+        <button class="py-1.5 rounded-lg">Özel</button>
         <button class="py-1.5 rounded-lg">Haftalar</button>
         <button class="py-1.5 rounded-lg bg-[#2EB85C] text-white shadow-xs">Aylar</button>
         <button class="py-1.5 rounded-lg">Yıllar</button>
@@ -189,14 +191,13 @@
     </div>
   </div>
 
-  <!-- ================= GÖRÜNÜM 1: KONTROL PANELİ (DASHBOARD) ================= -->
+  <!-- ================= GÖRÜNÜM 1: KONTROL PANELİ ================= -->
   <main id="view-dashboard" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4">
     
     <!-- HESAP KARTLARI (Masaüstünde Yatay Bar / Mobilde 2x2 Grid) -->
-    <!-- Masaüstü Bar -->
     <div class="hidden md:flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none">
       <div id="desktop-accounts-container" class="flex items-center space-x-3 shrink-0"></div>
-      <button onclick="promptNewAccount()" class="shrink-0 h-[62px] px-5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-xs font-semibold flex items-center space-x-1 transition bg-white/50 cursor-pointer">
+      <button onclick="openAccountModal()" class="shrink-0 h-[62px] px-5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-xs font-semibold flex items-center space-x-1 transition bg-white/50 cursor-pointer">
         <span class="text-base font-bold">+</span>
         <span>Hesap Ekle</span>
       </button>
@@ -214,10 +215,10 @@
       </div>
     </div>
 
-    <!-- WIDGETLAR (Masaüstünde 3'lü Grid / Mobilde Dikey Kolon) -->
+    <!-- WIDGETLAR (3'lü Grid) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       
-      <!-- WIDGET 1: GÖSTERGELER (İBRELER) -->
+      <!-- İBRELER -->
       <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xs font-bold text-slate-600 tracking-wider">Kontrol Paneli</h2>
@@ -256,7 +257,7 @@
         </div>
       </div>
 
-      <!-- WIDGET 2: BAKİYE EĞİLİMİ -->
+      <!-- BAKİYE EĞİLİMİ -->
       <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
         <div class="flex justify-between items-center mb-1">
           <h2 class="text-xs font-bold text-slate-600 tracking-wider">Bakiye Eğilimi</h2>
@@ -276,11 +277,11 @@
         </div>
       </div>
 
-      <!-- WIDGET 3: GİDER YAPISI -->
+      <!-- GİDER YAPISI -->
       <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
         <div class="flex justify-between items-center mb-1">
           <h2 class="text-xs font-bold text-slate-600 tracking-wider">Gider Yapısı</h2>
-          <div class="text-slate-400 text-xs flex space-x-2"><span>⚙️️</span><span>🗑</span></div>
+          <div class="text-slate-400 text-xs flex space-x-2"><span>⚙</span><span>🗑</span></div>
         </div>
         <div class="flex justify-between items-baseline mb-2">
           <div>
@@ -320,7 +321,7 @@
       <!-- Sol Panel -->
       <div class="md:col-span-1 space-y-4">
         <h1 class="text-xl font-bold text-slate-800">Hesaplar</h1>
-        <button onclick="promptNewAccount()" class="w-full py-2.5 px-4 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer flex items-center justify-center space-x-1">
+        <button onclick="openAccountModal()" class="w-full py-2.5 px-4 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer flex items-center justify-center space-x-1">
           <span class="text-sm font-bold">+</span>
           <span>Ekle</span>
         </button>
@@ -337,7 +338,6 @@
 
   <!-- ================= GÖRÜNÜM 3: HESAP DETAYI ================= -->
   <main id="view-detail" class="max-w-[1400px] mx-auto px-4 md:px-6 py-6 space-y-5" style="display: none;">
-    <!-- Üst Başlık & Eylemler -->
     <div class="flex items-center justify-between">
       <button onclick="switchTab('accounts')" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center space-x-1 cursor-pointer">
         <span class="text-base leading-none">&lt;</span>
@@ -443,7 +443,6 @@
   <!-- ================= GÖRÜNÜM 5: ANALİTİK (GELİR VE GİDER RAPORU) ================= -->
   <main id="view-analytics" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4" style="display: none;">
     
-    <!-- Üst Bar: Rapor Seçici & Tarih -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
       <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs font-medium text-slate-600">
         <button class="px-3.5 py-1.5 rounded-full bg-[#316974] text-white font-semibold flex items-center space-x-1.5 shadow-2xs">
@@ -502,8 +501,108 @@
 
   </main>
 
-  <!-- ================= 6. KAYIT EKLEME MODALI ================= -->
-  <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <!-- ================= 6. BİREBİR WALLET "HESAP EKLE" MODALI ================= -->
+  <div id="account-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+      
+      <!-- Başlık ve Kapatma Butonu -->
+      <div class="flex justify-between items-center pb-1">
+        <h3 class="font-bold text-lg text-slate-800">Hesap Ekle</h3>
+        <button onclick="closeAccountModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer leading-none">&times;</button>
+      </div>
+
+      <!-- 1. Satır: Ad * ve Renk (Yan Yana) -->
+      <div class="grid grid-cols-3 gap-3 items-end">
+        <div class="col-span-2">
+          <label class="text-xs font-semibold text-slate-700 mb-1 block">Ad <span class="text-rose-500">*</span></label>
+          <input id="acc-name-input" type="text" placeholder="Hesap adı" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
+        </div>
+        
+        <div class="col-span-1">
+          <label class="text-xs font-semibold text-slate-700 mb-1 block">Renk</label>
+          <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-lg p-2 cursor-pointer relative" onclick="toggleColorPicker()">
+            <span id="acc-color-dot" class="w-5 h-5 rounded-full shrink-0 shadow-xs" style="background-color: #6a1b9a;"></span>
+            <span id="acc-color-hex" class="text-[11px] font-mono text-slate-600 truncate">#6a1b9a</span>
+            
+            <!-- Açılır Renk Paleti -->
+            <div id="color-palette-pop" class="absolute top-11 right-0 bg-white border border-slate-200 shadow-xl rounded-xl p-2 hidden grid grid-cols-4 gap-2 z-50 w-40">
+              <span onclick="pickColor('#0084FF')" class="w-6 h-6 rounded-full bg-[#0084FF] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#6a1b9a')" class="w-6 h-6 rounded-full bg-[#6a1b9a] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#EA4335')" class="w-6 h-6 rounded-full bg-[#EA4335] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#2EB85C')" class="w-6 h-6 rounded-full bg-[#2EB85C] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#FB8C00')" class="w-6 h-6 rounded-full bg-[#FB8C00] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#0284C7')" class="w-6 h-6 rounded-full bg-[#0284C7] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#3F51B5')" class="w-6 h-6 rounded-full bg-[#3F51B5] cursor-pointer hover:scale-110 transition"></span>
+              <span onclick="pickColor('#64748B')" class="w-6 h-6 rounded-full bg-[#64748B] cursor-pointer hover:scale-110 transition"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Satır: Hesap Türü -->
+      <div>
+        <label class="text-xs font-semibold text-slate-700 mb-1 block">Hesap türü</label>
+        <div class="relative">
+          <select id="acc-type-select" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 appearance-none pr-8">
+            <option value="Genel hesap">☕ Genel hesap</option>
+            <option value="Nakit">💵 Nakit</option>
+            <option value="Vadesiz hesap">🏦 Vadesiz hesap</option>
+            <option value="Kredi kartı">💳 Kredi kartı</option>
+            <option value="Tasarruf hesabı">🐖 Tasarruf hesabı</option>
+            <option value="Bonus">🎁 Bonus</option>
+            <option value="Sigorta">🛡️ Sigorta</option>
+            <option value="Yatırım">📈 Yatırım</option>
+            <option value="Kredi">🤝 Kredi</option>
+            <option value="İpotek">🏠 İpotek</option>
+            <option value="Ek Hesap">➕ Ek Hesap</option>
+          </select>
+          <div class="absolute right-3 top-3 pointer-events-none text-slate-400 text-xs">⌄</div>
+        </div>
+      </div>
+
+      <!-- 3. Satır: Başlangıç Bakiyesi ve Para Birimi (Yan Yana) -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-700 mb-1 block">Başlangıç Bakiyesi</label>
+          <input id="acc-balance-input" type="number" step="0.01" inputmode="decimal" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-700 mb-1 block">Para birimi</label>
+          <div class="relative">
+            <select id="acc-currency-select" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 appearance-none pr-8">
+              <option value="TRY">₺ TRY</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+            </select>
+            <div class="absolute right-3 top-3 pointer-events-none text-slate-400 text-xs">⌄</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Satır: İstatistiklerden Hariç Tut (Toggle) -->
+      <div class="flex items-center justify-between pt-2">
+        <label for="acc-exclude-toggle" class="text-xs font-semibold text-slate-600 flex items-center gap-1 cursor-pointer">
+          <span>İstatistiklerden hariç tut</span>
+          <span class="text-slate-400 text-[11px]" title="Bu hesabın bakiyesi genel toplamlara dahil edilmez">ⓘ</span>
+        </label>
+        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+          <input type="checkbox" id="acc-exclude-toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 border-slate-300 appearance-none cursor-pointer"/>
+          <label for="acc-exclude-toggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-200 cursor-pointer"></label>
+        </div>
+      </div>
+
+      <!-- Alt Buton: Hesap Oluştur -->
+      <div class="pt-3">
+        <button id="acc-save-btn" type="button" onclick="saveNewAccount()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-xs cursor-pointer">
+          Hesap oluştur
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 7. KAYIT EKLEME MODALI ================= -->
+  <div id="record-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-sm text-slate-800">+ Yeni Kayıt Ekle</h3>
@@ -546,7 +645,7 @@
     </div>
   </div>
 
-  <!-- ================= 7. SUPABASE VE TÜM MANTIK ================= -->
+  <!-- ================= 8. SUPABASE VE LOGIC SCRIPTLERİ ================= -->
   <script>
     const SUPABASE_URL = "https://ljmdrizpzfggmvnricde.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_hyJxzInEszidGUHRbPAJhg_apYW0_hu";
@@ -571,6 +670,7 @@
     let transactions = [];
     let selectedAccountId = null;
     let currentType = 'expense';
+    let chosenAccColor = '#6a1b9a';
     let donutChartInstance = null;
     let trendChartInstance = null;
     let detailChartInstance = null;
@@ -599,9 +699,67 @@
       }
     }
 
-    // --- HESAP KARTLARINI RENDER ETME (HEM MASAÜSTÜ HEM MOBİL) ---
+    // --- HESAP EKLEME MODAL FONKSİYONLARI ---
+    function openAccountModal() {
+      document.getElementById('acc-name-input').value = '';
+      document.getElementById('acc-balance-input').value = '';
+      document.getElementById('acc-type-select').value = 'Genel hesap';
+      document.getElementById('acc-exclude-toggle').checked = false;
+      pickColor('#6a1b9a');
+      document.getElementById('account-modal').classList.remove('hidden');
+    }
+
+    function closeAccountModal() {
+      document.getElementById('account-modal').classList.add('hidden');
+      document.getElementById('color-palette-pop').classList.add('hidden');
+    }
+
+    function toggleColorPicker() {
+      document.getElementById('color-palette-pop').classList.toggle('hidden');
+    }
+
+    function pickColor(hex) {
+      chosenAccColor = hex;
+      document.getElementById('acc-color-dot').style.backgroundColor = hex;
+      document.getElementById('acc-color-hex').innerText = hex;
+      document.getElementById('color-palette-pop').classList.add('hidden');
+    }
+
+    async function saveNewAccount() {
+      const name = document.getElementById('acc-name-input').value.trim();
+      const balStr = document.getElementById('acc-balance-input').value.trim();
+      const type = document.getElementById('acc-type-select').value;
+      const isExcluded = document.getElementById('acc-exclude-toggle').checked;
+
+      if (!name) return alert('Lütfen hesap adını girin!');
+      const balance = parseFloat(balStr || '0');
+
+      const btn = document.getElementById('acc-save-btn');
+      btn.innerText = 'Hesap oluşturuluyor...';
+      btn.disabled = true;
+
+      const { error } = await supabase.from('accounts').insert([{
+        name: name,
+        type: type,
+        balance: balance,
+        color: chosenAccColor
+      }]);
+
+      btn.innerText = 'Hesap oluştur';
+      btn.disabled = false;
+
+      if (error) {
+        alert('Hesap oluşturulurken hata: ' + error.message);
+        return;
+      }
+
+      closeAccountModal();
+      await loadData();
+    }
+
+    // --- HESAP KARTLARINI RENDER ETME ---
     function renderDashboardAccounts() {
-      // Masaüstü Barı
+      // Masaüstü Yatay Bar
       const deskCont = document.getElementById('desktop-accounts-container');
       if (deskCont) {
         deskCont.innerHTML = '';
@@ -647,13 +805,13 @@
         });
 
         const addCard = document.createElement('div');
-        addCard.onclick = () => promptNewAccount();
+        addCard.onclick = () => openAccountModal();
         addCard.className = "rounded-xl border border-dashed border-slate-300 bg-white/70 p-2.5 text-slate-500 flex items-center justify-center text-xs font-bold cursor-pointer shadow-2xs";
         addCard.innerHTML = `<span>+ Hesap Ekle</span>`;
         mobGrid.appendChild(addCard);
       }
 
-      // Dropdownları Doldur
+      // Dropdownları Güncelle
       const selAcc = document.getElementById('select-account');
       if (selAcc) selAcc.innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
@@ -664,7 +822,7 @@
       if (recAcc) recAcc.innerHTML = '<option value="">Tüm hesaplar</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     }
 
-    // --- DASHBOARD: VERİ VE GRAFİKLER ---
+    // --- DASHBOARD: VERİLER VE GRAFİKLER ---
     function renderDashboardData() {
       const filtered = selectedAccountId ? transactions.filter(t => t.account_id === selectedAccountId) : transactions;
 
@@ -798,14 +956,14 @@
       });
     }
 
-    // --- HESAPLAR LİSTESİ SAYFASI ---
+    // --- HESAPLAR VE DETAY SAYFASI ---
     function renderAccountsPage() {
       const list = document.getElementById('accounts-page-list');
       if (!list) return;
       list.innerHTML = '';
 
       if (accounts.length === 0) {
-        list.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Henüz hesap yok.</div>';
+        list.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Henüz hesap yok. Üstteki "+ Ekle" butonuna basarak ekleyebilirsiniz.</div>';
         return;
       }
 
@@ -821,7 +979,7 @@
             </div>
             <div>
               <div class="text-xs font-bold text-slate-800">${a.name}</div>
-              <div class="text-[11px] text-slate-400">${a.type || 'Nakit'}</div>
+              <div class="text-[11px] text-slate-400">${a.type || 'Genel hesap'}</div>
             </div>
           </div>
           <div class="flex items-center space-x-4">
@@ -881,16 +1039,6 @@
     function toggleActionMenu() {
       const d = document.getElementById('action-dropdown');
       if (d) d.classList.toggle('hidden');
-    }
-
-    async function promptNewAccount() {
-      const name = prompt('Hesap Adı:');
-      if (!name) return;
-      const type = prompt('Hesap Türü (Nakit, Kredi kartı):', 'Nakit') || 'Nakit';
-      const bal = parseFloat(prompt('Mevcut Bakiye (₺):', '0') || '0');
-      const color = type.toLowerCase().includes('kredi') ? '#8E44AD' : '#0084FF';
-      await supabase.from('accounts').insert([{ name: name, type: type, balance: bal, color: color }]);
-      loadData();
     }
 
     async function editCurrentAccount() {
@@ -974,7 +1122,7 @@
       cont.appendChild(card);
     }
 
-    // --- ANALİTİK (GELİR VE GİDER RAPORU - 11 RESMİ KATEGORİ) ---
+    // --- ANALİTİK (GELİR VE GİDER RAPORU) ---
     function renderAnalyticsReport() {
       const tbody = document.getElementById('analytics-full-tbody');
       if (!tbody) return;
@@ -1028,7 +1176,7 @@
       tbody.appendChild(expTr);
 
       // 11 Kategori Eksiksiz
-      const listCats = ["Yiyecek & İçecek", "Alışveriş", "Konut", "Ulaşım", "Araç", "Yaşam & Eğlence", "İletişim, Bilgisayar", "Finansal harcamalar", "Yatırımlar", "Diğerleri", "Bilinmeyen"];
+      const listCats = ["Yatırımlar", "Yiyecek & İçecek", "Konut", "Araç", "Yaşam & Eğlence", "Alışveriş", "Ulaşım", "İletişim, Bilgisayar", "Finansal harcamalar", "Diğerleri", "Bilinmeyen"];
       listCats.forEach(c => {
         const cat = CATEGORIES[c] || { icon: '📦', color: '#9E9E9E' };
         const val = catSums[c] || 0;
@@ -1048,8 +1196,8 @@
     }
 
     // --- MODAL VE VERİ KAYIT ---
-    function openRecordModal() { document.getElementById('modal').classList.remove('hidden'); }
-    function closeRecordModal() { document.getElementById('modal').classList.add('hidden'); }
+    function openRecordModal() { document.getElementById('record-modal').classList.remove('hidden'); }
+    function closeRecordModal() { document.getElementById('record-modal').classList.add('hidden'); }
 
     function setType(t) {
       currentType = t;
@@ -1079,7 +1227,7 @@
 
     async function saveRecord() {
       const amt = parseFloat(document.getElementById('input-amount').value);
-      if (!amt || amt <= 0) return alert('Lütfen tutar girin');
+      if (!amt || amt <= 0) return alert('Lütfen geçerli bir tutar girin');
 
       const accId = document.getElementById('select-account').value;
       const cat = document.getElementById('select-category').value;
@@ -1120,7 +1268,7 @@
     }
 
     // Realtime Dinleme
-    supabase.channel('wallet-sync-main')
+    supabase.channel('wallet-sync-main-v3')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => loadData())
       .subscribe();
