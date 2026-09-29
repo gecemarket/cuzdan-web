@@ -15,12 +15,12 @@
     .gauge-bg { stroke: #E2E8F0; }
   </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen pb-16">
+<body class="text-slate-800 antialiased min-h-screen pb-16 select-none">
 
   <!-- 1. ÜST NAVİGASYON (NAVBAR) -->
   <header class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
     <div class="flex items-center space-x-6 overflow-x-auto py-1">
-      <div class="flex items-center space-x-2 shrink-0 pr-2">
+      <div class="flex items-center space-x-2 shrink-0 pr-2 cursor-pointer" onclick="switchTab('dashboard')">
         <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-black text-lg shadow-sm">
           W
         </div>
@@ -29,12 +29,10 @@
 
       <!-- Menü Sekmeleri -->
       <nav class="flex items-center space-x-1.5 shrink-0 text-[13px] font-medium text-slate-600">
-        <button id="nav-dashboard" onclick="switchView('dashboard')" class="px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer">Kontrol Paneli</button>
-        <button id="nav-accounts" onclick="switchView('accounts')" class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition cursor-pointer">Hesaplar</button>
-        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition">Kayıtlar</button>
-        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition">Analitik</button>
-        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition hidden sm:inline">Yatırımlar</button>
-        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition hidden sm:inline">İçe Aktarılanlar</button>
+        <button id="nav-dashboard" type="button" onclick="switchTab('dashboard')" class="px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer">Kontrol Paneli</button>
+        <button id="nav-accounts" type="button" onclick="switchTab('accounts')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Hesaplar</button>
+        <button type="button" class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition opacity-60">Kayıtlar</button>
+        <button type="button" class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition opacity-60">Analitik</button>
       </nav>
     </div>
 
@@ -42,7 +40,7 @@
       <span id="sync-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
         ● Canlı
       </span>
-      <button onclick="openModal()" class="bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-medium text-[13px] px-4 py-1.5 rounded-md shadow-xs transition flex items-center space-x-1 cursor-pointer">
+      <button type="button" onclick="openModal()" class="bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-medium text-[13px] px-4 py-1.5 rounded-md shadow-xs transition flex items-center space-x-1 cursor-pointer">
         <span class="text-base font-bold leading-none">+</span>
         <span>Kayıt</span>
       </button>
@@ -53,12 +51,12 @@
     </div>
   </header>
 
-  <!-- ================= GÖRÜNÜM 1: KONTROL PANELİ ================= -->
-  <main id="view-dashboard" class="max-w-[1400px] mx-auto px-4 sm:px-6 py-5 space-y-4">
+  <!-- ================= 1. KONTROL PANELİ SAYFASI ================= -->
+  <div id="page-dashboard" class="max-w-[1400px] mx-auto px-4 sm:px-6 py-5 space-y-4">
     <!-- Hesap Kartları Barı -->
     <div class="flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none">
       <div id="accounts-container" class="flex items-center space-x-3 shrink-0"></div>
-      <button onclick="switchView('accounts')" class="shrink-0 h-[62px] px-5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-xs font-semibold flex items-center space-x-1 transition bg-white/50 cursor-pointer">
+      <button type="button" onclick="switchTab('accounts')" class="shrink-0 h-[62px] px-5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-xs font-semibold flex items-center space-x-1 transition bg-white/50 cursor-pointer">
         <span class="text-base font-bold">+</span>
         <span>Hesap Ekle</span>
       </button>
@@ -158,50 +156,49 @@
         <div class="text-center py-6 text-xs text-slate-400">Yükleniyor...</div>
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- ================= GÖRÜNÜM 2: HESAPLAR LİSTESİ ================= -->
-  <main id="view-accounts" class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 hidden">
+  <!-- ================= 2. HESAPLAR LİSTESİ SAYFASI ================= -->
+  <div id="page-accounts" class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6" style="display: none;">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
       
-      <!-- Sol Panel -->
+      <!-- Sol Menü -->
       <div class="md:col-span-1 space-y-4">
         <h1 class="text-xl font-bold text-slate-800">Hesaplar</h1>
-        <button onclick="promptNewAccount()" class="w-full py-2.5 px-4 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer flex items-center justify-center space-x-1">
+        <button type="button" onclick="promptNewAccount()" class="w-full py-2.5 px-4 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer flex items-center justify-center space-x-1">
           <span class="text-sm font-bold">+</span>
           <span>Ekle</span>
         </button>
 
         <div class="flex items-center space-x-2 pt-2 text-xs text-slate-600">
-          <span class="text-emerald-500">◉</span>
+          <span class="text-emerald-500 font-bold">●</span>
           <span>Arşivlenmişleri göster</span>
         </div>
       </div>
 
-      <!-- Sağ Panel: Hesap Listesi Satırları -->
+      <!-- Sağ Menü: Kart Listesi -->
       <div class="md:col-span-3 space-y-2.5" id="accounts-page-list">
         <!-- JS ile dolacak -->
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- ================= GÖRÜNÜM 3: HESAP DETAYI ================= -->
-  <main id="view-account-detail" class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 hidden space-y-5">
+  <!-- ================= 3. HESAP DETAYI SAYFASI ================= -->
+  <div id="page-detail" class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 space-y-5" style="display: none;">
     
-    <!-- Başlık ve Butonlar -->
     <div class="flex items-center justify-between">
-      <button onclick="switchView('accounts')" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center space-x-1 cursor-pointer">
+      <button type="button" onclick="switchTab('accounts')" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center space-x-1 cursor-pointer">
         <span class="text-base leading-none">&lt;</span>
         <span>Hesap Detayı</span>
       </button>
 
       <div class="flex items-center space-x-2">
-        <button onclick="editCurrentAccount()" class="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-medium shadow-2xs cursor-pointer">Düzenle</button>
-        <button onclick="deleteCurrentAccount()" class="px-4 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 rounded-full text-xs font-medium shadow-2xs cursor-pointer">Sil</button>
+        <button type="button" onclick="editCurrentAccount()" class="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-medium shadow-2xs cursor-pointer">Düzenle</button>
+        <button type="button" onclick="deleteCurrentAccount()" class="px-4 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 rounded-full text-xs font-medium shadow-2xs cursor-pointer">Sil</button>
       </div>
     </div>
 
-    <!-- Hesap Bilgi Başlığı -->
+    <!-- Başlık Kartı -->
     <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center space-x-4 shadow-2xs">
       <div id="detail-card-icon" class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-xs">
         💳
@@ -214,11 +211,11 @@
       </div>
     </div>
 
-    <!-- Detay Sekmeleri -->
+    <!-- Bakiye Grafiği -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
       <div class="border-b border-slate-200 px-5 flex space-x-6 text-xs font-medium text-slate-500">
-        <button class="py-3 text-slate-800 border-b-2 border-emerald-500 font-bold">Bakiye</button>
-        <button class="py-3 hover:text-slate-800">Kayıtlar</button>
+        <button type="button" class="py-3 text-slate-800 border-b-2 border-emerald-500 font-bold">Bakiye</button>
+        <button type="button" class="py-3 hover:text-slate-800">Kayıtlar</button>
       </div>
 
       <div class="p-6">
@@ -237,19 +234,19 @@
         </div>
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- ================= KAYIT EKLEME MODALI ================= -->
+  <!-- ================= MODAL: KAYIT EKLE ================= -->
   <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-sm text-slate-800">+ Yeni Kayıt Ekle</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+        <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
       </div>
 
       <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-lg">
-        <button id="btn-exp" type="button" onclick="setType('expense')" class="py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs">Gider</button>
-        <button id="btn-inc" type="button" onclick="setType('income')" class="py-2 text-xs font-bold rounded-md text-slate-600">Gelir</button>
+        <button id="btn-exp" type="button" onclick="setType('expense')" class="py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs cursor-pointer">Gider</button>
+        <button id="btn-inc" type="button" onclick="setType('income')" class="py-2 text-xs font-bold rounded-md text-slate-600 cursor-pointer">Gelir</button>
       </div>
 
       <div>
@@ -277,7 +274,7 @@
         <input id="input-note" type="text" placeholder="İsteğe bağlı not..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none">
       </div>
 
-      <button id="save-btn" onclick="saveRecord()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-sm cursor-pointer">
+      <button id="save-btn" type="button" onclick="saveRecord()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-sm cursor-pointer">
         Kaydet
       </button>
     </div>
@@ -312,6 +309,35 @@
     let trendChartInstance = null;
     let detailChartInstance = null;
 
+    // SEKME GEÇİŞİ (KONTROL PANELİ / HESAPLAR / DETAY)
+    function switchTab(tab) {
+      const pDash = document.getElementById('page-dashboard');
+      const pAcc = document.getElementById('page-accounts');
+      const pDet = document.getElementById('page-detail');
+
+      const btnDash = document.getElementById('nav-dashboard');
+      const btnAcc = document.getElementById('nav-accounts');
+
+      pDash.style.display = 'none';
+      pAcc.style.display = 'none';
+      pDet.style.display = 'none';
+
+      btnDash.className = "px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer";
+      btnAcc.className = "px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer";
+
+      if (tab === 'dashboard') {
+        pDash.style.display = 'block';
+        btnDash.className = "px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer";
+      } else if (tab === 'accounts') {
+        pAcc.style.display = 'block';
+        btnAcc.className = "px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer";
+        renderAccountsPage();
+      } else if (tab === 'detail') {
+        pDet.style.display = 'block';
+        btnAcc.className = "px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer";
+      }
+    }
+
     async function init() {
       await loadData();
       initCategories();
@@ -338,30 +364,6 @@
       }
     }
 
-    // GÖRÜNÜM GEÇİŞLERİ
-    function switchView(viewName) {
-      document.getElementById('view-dashboard').classList.add('hidden');
-      document.getElementById('view-accounts').classList.add('hidden');
-      document.getElementById('view-account-detail').classList.add('hidden');
-
-      const btnDash = document.getElementById('nav-dashboard');
-      const btnAcc = document.getElementById('nav-accounts');
-      btnDash.className = "px-3.5 py-1.5 rounded-full hover:bg-slate-50 transition cursor-pointer";
-      btnAcc.className = "px-3.5 py-1.5 rounded-full hover:bg-slate-50 transition cursor-pointer";
-
-      if (viewName === 'dashboard') {
-        document.getElementById('view-dashboard').classList.remove('hidden');
-        btnDash.className = "px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer";
-      } else if (viewName === 'accounts') {
-        document.getElementById('view-accounts').classList.remove('hidden');
-        btnAcc.className = "px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer";
-      } else if (viewName === 'account-detail') {
-        document.getElementById('view-account-detail').classList.remove('hidden');
-        btnAcc.className = "px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs cursor-pointer";
-      }
-    }
-
-    // DASHBOARD HESAP KARTLARI
     function renderDashboardAccounts() {
       const c = document.getElementById('accounts-container');
       c.innerHTML = '';
@@ -389,10 +391,15 @@
       selAcc.innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     }
 
-    // HESAPLAR SAYFASI LİSTESİ (RESMİ WALLET TASARIMI)
     function renderAccountsPage() {
       const list = document.getElementById('accounts-page-list');
+      if (!list) return;
       list.innerHTML = '';
+
+      if (accounts.length === 0) {
+        list.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Henüz hesap bulunmuyor.</div>';
+        return;
+      }
 
       accounts.forEach(a => {
         const val = parseFloat(a.balance);
@@ -420,11 +427,10 @@
       });
     }
 
-    // HESAP DETAY EKRANI
     function openAccountDetail(accId) {
       viewingAccountId = accId;
       renderAccountDetail(accId);
-      switchView('account-detail');
+      switchTab('detail');
     }
 
     function renderAccountDetail(accId) {
@@ -439,7 +445,6 @@
       const iconBox = document.getElementById('detail-card-icon');
       iconBox.style.backgroundColor = a.color || '#0084FF';
 
-      // Çizgi Grafiği
       if (detailChartInstance) detailChartInstance.destroy();
       const ctx = document.getElementById('detailTrendChart').getContext('2d');
       detailChartInstance = new Chart(ctx, {
@@ -489,12 +494,11 @@
     async function deleteCurrentAccount() {
       if (confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
         await supabase.from('accounts').delete().eq('id', viewingAccountId);
-        switchView('accounts');
+        switchTab('accounts');
         loadData();
       }
     }
 
-    // DASHBOARD GRAFİKLERİ VE VERİLERİ
     function renderDashboard() {
       const filtered = selectedAccountId ? transactions.filter(t => t.account_id === selectedAccountId) : transactions;
 
@@ -624,7 +628,7 @@
             <div class="text-xs font-bold ${isExp ? 'text-rose-500' : 'text-emerald-500'}">
               ${isExp ? '-' : '+'}₺${parseFloat(x.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
             </div>
-            <button onclick="deleteRecord('${x.id}')" class="text-[10px] text-slate-400 hover:text-rose-500">Sil</button>
+            <button type="button" onclick="deleteRecord('${x.id}')" class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer">Sil</button>
           </div>
         `;
         t.appendChild(row);
@@ -639,11 +643,11 @@
       const bExp = document.getElementById('btn-exp');
       const bInc = document.getElementById('btn-inc');
       if (t === 'expense') {
-        bExp.className = 'py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs';
-        bInc.className = 'py-2 text-xs font-bold rounded-md text-slate-600';
+        bExp.className = 'py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs cursor-pointer';
+        bInc.className = 'py-2 text-xs font-bold rounded-md text-slate-600 cursor-pointer';
       } else {
-        bInc.className = 'py-2 text-xs font-bold rounded-md bg-emerald-500 text-white shadow-xs';
-        bExp.className = 'py-2 text-xs font-bold rounded-md text-slate-600';
+        bInc.className = 'py-2 text-xs font-bold rounded-md bg-emerald-500 text-white shadow-xs cursor-pointer';
+        bExp.className = 'py-2 text-xs font-bold rounded-md text-slate-600 cursor-pointer';
       }
     }
 
