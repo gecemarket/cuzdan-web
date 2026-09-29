@@ -6,7 +6,7 @@
   <title>Wallet by BudgetBakers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,11 +22,11 @@
   <!-- ================= ÇEKİRDEK KONTROL VE MODAL MOTORU ================= -->
   <script>
     window.activeTab = 'dashboard';
-    window.activeReportType = 'cashflow'; // 'cashflow' | 'income_expense'
+    window.activeReportType = 'cashflow';
     window.viewingAccountId = null;
     window.chosenAccColor = '#EA4335';
     window.analyticsTimeframe = '1A';
-    window.activeMonth = 8; // Ağustos 2026 varsayılan
+    window.activeMonth = 9; // 7: Temmuz, 8: Ağustos, 9: Eylül
     window.activeYear = 2026;
 
     const MONTH_NAMES = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
@@ -182,7 +182,7 @@
         <button id="d-tab-dashboard" type="button" onclick="switchTab('dashboard')" class="px-3.5 py-1.5 rounded-full tab-btn-active transition cursor-pointer">Kontrol Paneli</button>
         <button id="d-tab-accounts" type="button" onclick="switchTab('accounts')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Hesaplar</button>
         <button id="d-tab-records" type="button" onclick="switchTab('records')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Kayıtlar</button>
-        <button id="d-tab-analytics" type="button" onclick="switchTab('analytics')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Analitik</button>
+        <button id="d-tab-analytics" type="button" onclick="switchTab('analytics')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Analitik (Grafikler)</button>
         <button type="button" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition opacity-60">Yatırımlar</button>
         <button type="button" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition opacity-60">İçe Aktarılanlar</button>
       </nav>
@@ -257,8 +257,8 @@
         <button type="button" onclick="selectMonthNum(5)" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
         <button type="button" onclick="selectMonthNum(6)" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
         <button type="button" onclick="selectMonthNum(7)" class="p-2.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 font-bold border border-slate-200">Tem</button>
-        <button type="button" onclick="selectMonthNum(8)" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Ağu</button>
-        <button type="button" onclick="selectMonthNum(9)" class="p-2.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 font-bold border border-slate-200">Eyl</button>
+        <button type="button" onclick="selectMonthNum(8)" class="p-2.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 font-bold border border-slate-200">Ağu</button>
+        <button type="button" onclick="selectMonthNum(9)" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Eyl</button>
         <button type="button" onclick="selectMonthNum(10)" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
         <button type="button" onclick="selectMonthNum(11)" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
         <button type="button" onclick="selectMonthNum(12)" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
@@ -283,20 +283,18 @@
     <div class="flex justify-center items-center py-1">
       <div class="bg-white border border-slate-200 shadow-2xs rounded-full px-4 py-1.5 flex items-center space-x-4 text-xs font-semibold text-slate-700">
         <button type="button" onclick="stepMonth(-1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&lt;</button>
-        <span onclick="toggleDateModal(true)" id="current-month-display" class="cursor-pointer">Ağustos 2026 ⌄</span>
+        <span onclick="toggleDateModal(true)" id="current-month-display" class="cursor-pointer font-bold">Eylül 2026 ⌄</span>
         <button type="button" onclick="stepMonth(1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&gt;</button>
       </div>
     </div>
 
     <!-- 3'lü Göstergeler -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      
       <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xs font-bold text-slate-600 tracking-wider">Kontrol Paneli</h2>
           <div class="text-slate-400 text-xs flex space-x-2"><span>🎛</span><span>🗑</span></div>
         </div>
-
         <div class="grid grid-cols-3 gap-2 text-center py-4">
           <div class="flex flex-col items-center">
             <svg class="w-16 h-12" viewBox="0 0 100 60">
@@ -323,7 +321,6 @@
             <span id="gauge-exp" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
           </div>
         </div>
-
         <div class="border-t border-slate-100 pt-3 text-center">
           <span class="text-[11px] text-slate-400 font-medium">Bu dönem verileri</span>
         </div>
@@ -339,9 +336,7 @@
             <span class="text-[10px] text-slate-400 block font-medium">Dönem Net Değişimi</span>
             <span id="trend-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
           </div>
-          <span id="trend-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-            Canlı Takip
-          </span>
+          <span id="trend-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Canlı Takip</span>
         </div>
         <div class="h-36 w-full mt-2">
           <canvas id="trendChart"></canvas>
@@ -358,17 +353,13 @@
             <span class="text-[10px] text-slate-400 block font-medium">Toplam Gider</span>
             <span id="expense-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
           </div>
-          <span class="text-[11px] text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">
-            Dağılım
-          </span>
+          <span class="text-[11px] text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">Dağılım</span>
         </div>
-
         <div class="relative w-32 h-32 mx-auto my-2">
           <canvas id="donutChart"></canvas>
         </div>
         <div id="expense-legend" class="text-[11px] text-slate-500 flex flex-wrap gap-2 justify-center mt-2"></div>
       </div>
-
     </div>
 
     <!-- Son Kayıtlar -->
@@ -393,12 +384,7 @@
           <span class="text-sm font-bold">+</span>
           <span>Ekle</span>
         </button>
-        <div class="flex items-center space-x-2 pt-2 text-xs text-slate-600">
-          <span class="text-emerald-500 font-bold">●</span>
-          <span>Arşivlenmişleri göster</span>
-        </div>
       </div>
-
       <div class="md:col-span-3 space-y-2.5" id="accounts-page-list"></div>
     </div>
   </main>
@@ -410,7 +396,6 @@
         <span class="text-base leading-none">&lt;</span>
         <span>Hesap Detayı</span>
       </button>
-
       <div class="relative">
         <button type="button" onclick="document.getElementById('action-dropdown').classList.toggle('hidden')" class="border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs">
           <span>Eylemler</span>
@@ -437,26 +422,16 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-      <div class="border-b border-slate-200 px-5 flex space-x-6 text-xs font-medium text-slate-500">
-        <button type="button" class="py-3 text-slate-800 border-b-2 border-emerald-500 font-bold">Bakiye</button>
-        <button type="button" onclick="switchTab('records')" class="py-3 hover:text-slate-800 cursor-pointer">Kayıtlar</button>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-6">
+      <div class="flex justify-between items-baseline mb-3">
+        <div>
+          <span class="text-[10px] text-slate-400 block font-medium">Mevcut Bakiye</span>
+          <span id="detail-balance" class="text-2xl font-bold text-slate-800 tracking-tight">-₺15.000,00</span>
+        </div>
+        <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">0 Referans Çizgisi</span>
       </div>
-
-      <div class="p-6">
-        <div class="flex justify-between items-baseline mb-3">
-          <div>
-            <span class="text-[10px] text-slate-400 block font-medium">Mevcut Bakiye</span>
-            <span id="detail-balance" class="text-2xl font-bold text-slate-800 tracking-tight">-₺15.000,00</span>
-          </div>
-          <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-            0 Referans Çizgisi
-          </span>
-        </div>
-
-        <div class="h-64 w-full mt-4">
-          <canvas id="detailTrendChart"></canvas>
-        </div>
+      <div class="h-64 w-full mt-4">
+        <canvas id="detailTrendChart"></canvas>
       </div>
     </div>
   </main>
@@ -485,7 +460,7 @@
         <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs text-xs font-semibold text-slate-600">
           <div class="flex items-center space-x-2">
             <button type="button" onclick="stepMonth(-1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&lt;</button>
-            <span onclick="toggleDateModal(true)" id="records-month-display" class="cursor-pointer font-bold text-slate-800">Ağustos 2026 ⌄</span>
+            <span onclick="toggleDateModal(true)" id="records-month-display" class="cursor-pointer font-bold text-slate-800">Eylül 2026 ⌄</span>
             <button type="button" onclick="stepMonth(1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&gt;</button>
           </div>
           <span id="records-total-period" class="font-bold text-slate-800">₺0,00</span>
@@ -495,12 +470,11 @@
     </div>
   </main>
 
-  <!-- ================= GÖRÜNÜM 5: ANALİTİK (NAKİT AKIŞI & RAPORLAR) ================= -->
+  <!-- ================= GÖRÜNÜM 5: ANALİTİK (HIZLI GENEL BAKIŞ VE RAPORLAR) ================= -->
   <main id="view-analytics" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-5" style="display: none;">
     
     <!-- Üst Kontrol Barı -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <!-- Rapor Türü Seçicisi -->
       <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
         <button id="btn-rep-cashflow" onclick="setReportType('cashflow')" class="px-3.5 py-1.5 rounded-full report-tab-active font-semibold shadow-2xs transition cursor-pointer flex items-center space-x-1.5">
           <span>📊</span><span>Nakit akışı</span>
@@ -510,44 +484,66 @@
         </button>
       </div>
 
-      <!-- Ay ve Zaman Seçici -->
       <div class="flex items-center gap-3">
         <div class="bg-slate-50 border border-slate-200 rounded-full px-3 py-1 flex items-center space-x-2 text-xs font-semibold text-slate-700">
           <button type="button" onclick="stepMonth(-1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&lt;</button>
-          <span onclick="toggleDateModal(true)" id="analytics-month-display" class="cursor-pointer">Ağustos 2026 ⌄</span>
+          <span onclick="toggleDateModal(true)" id="analytics-month-display" class="cursor-pointer font-bold">Eylül 2026 ⌄</span>
           <button type="button" onclick="stepMonth(1)" class="text-slate-400 hover:text-slate-700 cursor-pointer">&gt;</button>
-        </div>
-
-        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-full text-xs font-semibold overflow-x-auto">
-          <button id="tf-btn-1G" onclick="setTimeframe('1G')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">1 Gün</button>
-          <button id="tf-btn-1H" onclick="setTimeframe('1H')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">1 Hafta</button>
-          <button id="tf-btn-1A" onclick="setTimeframe('1A')" class="px-3 py-1 rounded-full time-btn-active transition cursor-pointer">1 Ay</button>
-          <button id="tf-btn-6A" onclick="setTimeframe('6A')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">6 Ay</button>
-          <button id="tf-btn-1Y" onclick="setTimeframe('1Y')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">1 Yıl</button>
-          <button id="tf-btn-ALL" onclick="setTimeframe('ALL')" class="px-3 py-1 rounded-full text-slate-600 hover:bg-white transition cursor-pointer">Tümü</button>
         </div>
       </div>
     </div>
 
-    <!-- RAPOR 1: NAKİT AKIŞI EKRANI (BİREBİR WALLET TASARIMI) -->
+    <!-- HIZLI GENEL BAKIŞ WIDGETI (PDF'TEKİ 3 AYLIK ÖZET) -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl shadow-sm p-5 text-white">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <span class="text-xs uppercase font-bold tracking-wider text-emerald-400">PDF Raporu: Hızlı Genel Bakış (1 Tem - 30 Eyl)</span>
+          <h2 class="text-sm font-semibold text-slate-300">3 Aylık Toplam Finansal Durum</h2>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Toplam Nakit Akışı</span>
+          <span class="text-xl font-extrabold text-emerald-400">₺58.875,00</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-700/60 text-xs">
+        <div class="bg-white/5 p-2.5 rounded-xl border border-white/10">
+          <span class="text-slate-400 block text-[11px]">Gelirler (88 Adet)</span>
+          <span class="text-base font-bold text-emerald-400 mt-0.5 block">₺178.948,00</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Ort/Gün: ₺1.945,09</span>
+        </div>
+        <div class="bg-white/5 p-2.5 rounded-xl border border-white/10">
+          <span class="text-slate-400 block text-[11px]">Giderler (162 Adet)</span>
+          <span class="text-base font-bold text-rose-400 mt-0.5 block">-₺120.073,00</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Ort/Gün: -₺1.305,14</span>
+        </div>
+        <div class="bg-white/5 p-2.5 rounded-xl border border-white/10">
+          <span class="text-slate-400 block text-[11px]">Kayıt Başı Gelir</span>
+          <span class="text-base font-bold text-slate-200 mt-0.5 block">₺2.033,50</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Ortalama</span>
+        </div>
+        <div class="bg-white/5 p-2.5 rounded-xl border border-white/10">
+          <span class="text-slate-400 block text-[11px]">Kayıt Başı Gider</span>
+          <span class="text-base font-bold text-slate-200 mt-0.5 block">-₺741,19</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Ortalama</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAPOR 1: NAKİT AKIŞI EKRANI -->
     <div id="section-cashflow-report" class="space-y-5">
-      
-      <!-- Özet Kartları: Nakit Akışı, Gelir, Gider, Önceki Döneme Karşı -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5">
         <div class="flex flex-col md:flex-row md:items-baseline justify-between border-b border-slate-100 pb-4 mb-4 gap-3">
           <div>
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Nakit Akışı</span>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Nakit Akışı (Seçili Ay)</span>
             <div class="flex items-baseline space-x-3 mt-1">
-              <span id="cf-net-amount" class="text-3xl font-extrabold text-[#2EB85C] tracking-tight">₺63.860,00</span>
-              <span class="text-xs font-semibold text-slate-400">Önceki Döneme Karşı <b id="cf-growth-rate" class="text-emerald-600 font-bold">↗ 279%</b></span>
+              <span id="cf-net-amount" class="text-3xl font-extrabold text-[#2EB85C] tracking-tight">₺0,00</span>
+              <span class="text-xs font-semibold text-slate-400">Önceki Döneme Karşı <b id="cf-growth-rate" class="text-emerald-600 font-bold">↗ +279%</b></span>
             </div>
           </div>
-
-          <!-- Dönem Filtre Hapları -->
           <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
             <button class="px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-2xs font-bold">Mevcut Dönem</button>
             <button class="px-3 py-1.5 rounded-lg hover:text-slate-900 transition">Önceki Dönem</button>
-            <button class="px-3 py-1.5 rounded-lg hover:text-slate-900 transition hidden sm:inline">Bir yıl önceki aynı dönem</button>
           </div>
         </div>
 
@@ -555,21 +551,19 @@
           <div class="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5 flex items-center justify-between">
             <div>
               <span class="text-[11px] font-bold text-emerald-800 uppercase block">Gelir</span>
-              <span id="cf-income-amount" class="text-lg font-bold text-emerald-600 tracking-tight mt-0.5 block">₺90.201,00</span>
+              <span id="cf-income-amount" class="text-lg font-bold text-emerald-600 tracking-tight mt-0.5 block">₺0,00</span>
             </div>
             <span class="text-xl">💰</span>
           </div>
-
           <div class="bg-rose-50/60 border border-rose-100 rounded-xl p-3.5 flex items-center justify-between">
             <div>
               <span class="text-[11px] font-bold text-rose-800 uppercase block">Gider</span>
-              <span id="cf-expense-amount" class="text-lg font-bold text-rose-600 tracking-tight mt-0.5 block">-₺26.341,00</span>
+              <span id="cf-expense-amount" class="text-lg font-bold text-rose-600 tracking-tight mt-0.5 block">-₺0,00</span>
             </div>
             <span class="text-xl">🛒</span>
           </div>
         </div>
 
-        <!-- 0-Merkezli Günlük Çubuk Grafiği (-8B ile +8B Aralığı) -->
         <div class="mt-6">
           <div class="flex justify-between items-center mb-2">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Günlük Nakit Akışı Seyri (0 Referanslı)</h3>
@@ -580,34 +574,10 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- RAPOR 2: GELİR VE GİDER RAPORU (TABLO VE KIYASLAMA) -->
+    <!-- RAPOR 2: GELİR VE GİDER RAPORU -->
     <div id="section-income-expense-report" class="space-y-5" style="display: none;">
-      
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col justify-between">
-          <div class="flex justify-between items-center mb-2">
-            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Net Bakiye & Borç Eğilimi (0 Merkezli)</h2>
-            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Dinamik</span>
-          </div>
-          <div class="h-64 w-full mt-2">
-            <canvas id="analyticsNetChart"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col justify-between">
-          <div class="flex justify-between items-center mb-2">
-            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Gelir vs Gider Kıyaslama</h2>
-            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">Kıyas</span>
-          </div>
-          <div class="h-64 w-full mt-2">
-            <canvas id="analyticsBarChart"></canvas>
-          </div>
-        </div>
-      </div>
-
       <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 overflow-x-auto">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Gelir ve Gider Raporu Detayı</h2>
@@ -624,7 +594,6 @@
           <tbody id="analytics-full-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
         </table>
       </div>
-
     </div>
 
   </main>
@@ -632,7 +601,6 @@
   <!-- ================= 6. HESAP EKLEME MODALI ================= -->
   <div id="account-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 items-center justify-center p-4" style="display: none;">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
-      
       <div class="flex justify-between items-center pb-1">
         <h3 class="font-bold text-lg text-slate-800">Hesap Ekle</h3>
         <button type="button" onclick="closeAccountModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold cursor-pointer leading-none">&times;</button>
@@ -643,7 +611,6 @@
           <label class="text-xs font-semibold text-slate-700 mb-1 block">Ad <span class="text-rose-500">*</span></label>
           <input id="acc-name-input" type="text" placeholder="Hesap adı (Örn: Ziraat)" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
         </div>
-        
         <div class="col-span-1 relative">
           <label class="text-xs font-semibold text-slate-700 mb-1 block">Renk</label>
           <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-100 transition relative overflow-hidden" onclick="document.getElementById('native-color-picker').click()">
@@ -697,7 +664,6 @@
           Hesap oluştur
         </button>
       </div>
-
     </div>
   </div>
 
@@ -734,11 +700,6 @@
         <select id="select-sub" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
       </div>
 
-      <div>
-        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Açıklama / Not</label>
-        <input id="input-note" type="text" placeholder="İsteğe bağlı not..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none">
-      </div>
-
       <button id="save-btn" type="button" onclick="saveRecord()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-sm cursor-pointer">
         Kaydet
       </button>
@@ -755,15 +716,15 @@
 
     const CATEGORIES = {
       "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Hisse senedi", "Finansal yatırımlar", "Altın/Döviz", "Kripto"] },
-      "Yiyecek & İçecek": { color: "#EA4335", icon: "🍴", subs: ["Yiyecek & İçecek", "Restoran, fast-food", "Bar, kafe", "Market ürünleri"] },
+      "Yiyecek & İçecek": { color: "#EA4335", icon: "🍴", subs: ["Yiyecek & İçecek", "Restoran, fast-food", "Bar, kafe", "Market alışverişi"] },
       "Konut": { color: "#FB8C00", icon: "🏠", subs: ["Konut", "Kira", "Faturalar", "Bakım"] },
       "Araç": { color: "#AB47BC", icon: "🚗", subs: ["Araç", "Yakıt", "Araç bakımı", "Otopark"] },
       "Yaşam & Eğlence": { color: "#7CB342", icon: "🎉", subs: ["Eğlence", "Tatil", "Alkol, tütün", "Kültür, spor etkinlikleri", "Piyango, kumar"] },
-      "Alışveriş": { color: "#0084FF", icon: "🛍️", subs: ["Alışveriş", "Giyim", "Elektronik", "Ev"] },
-      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Toplu taşıma", "Taksi", "Uzun mesafe"] },
+      "Alışveriş": { color: "#0084FF", icon: "🛍️️", subs: ["Alışveriş", "Giyim", "Elektronik", "Ev"] },
+      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Toplu taşıma", "Taksi", "Uzak mesafe"] },
       "İletişim, Bilgisayar": { color: "#3F51B5", icon: "💻", subs: ["İnternet", "Telefon", "Yazılım, uygulamalar, oyunlar", "TV, Yayın"] },
       "Finansal harcamalar": { color: "#26A69A", icon: "💳", subs: ["Banka ücretleri", "Tevfikat Tutarı", "Vergiler", "Kredi faizi", "Transfer, çekim"] },
-      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş, fatura", "Hediyeler", "Bağış, hediyeler", "Ek Gelir"] },
+      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş, faturalar", "Hediyeler", "Bağış, hediyeler", "Ek Gelir"] },
       "Diğerleri": { color: "#9E9E9E", icon: "📦", subs: ["Diğer", "Wellness, güzellik"] },
       "Bilinmeyen": { color: "#B0BEC5", icon: "❓", subs: ["Bilinmeyen"] }
     };
@@ -774,19 +735,19 @@
       { id: "acc-ziraat-3", name: "Ziraat", type: "Kredi kartı", balance: -15000, color: "#EA4335" }
     ];
 
-    // ================= TÜM İŞLEM GEÇMİŞİ (TEMMUZ, AĞUSTOS, EYLÜL 2026) =================
+    // ================= TÜM VERİLER (TEMMUZ, AĞUSTOS, EYLÜL 2026 - 250 KAYIT) =================
     const RAW_USER_TRANSACTIONS = [
-      // --- EYLÜL 2026 ---
+      // EYLÜL 2026
       ["2026-09-29","expense",655,"Finansal harcamalar","Tevfikat Tutarı","Nakit","16:11"],
-      ["2026-09-29","expense",1046,"İletişim, Bilgisayar","Yazılım, uygulamalar, oyunlar","QNB","08:52"],
+      ["2026-09-29","expense",1045,"İletişim, Bilgisayar","Yazılım, uygulamalar, oyunlar","QNB","08:52"],
       ["2026-09-28","expense",3175,"Yatırımlar","Finansal yatırımlar","Nakit","18:44"],
-      ["2026-09-27","income",6337,"Gelir","Maaş, fatura","Nakit","23:10"],
+      ["2026-09-27","income",6337,"Gelir","Maaş, faturalar","Nakit","23:10"],
       ["2026-09-27","income",200,"Gelir","Hediyeler","Nakit","23:01"],
       ["2026-09-27","expense",140,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:14"],
       ["2026-09-27","expense",300,"Araç","Yakıt","Nakit","19:54"],
       ["2026-09-27","income",35,"Gelir","Hediyeler","Nakit","18:49"],
       ["2026-09-27","income",38,"Gelir","Hediyeler","Nakit","14:17"],
-      ["2026-09-26","income",3872,"Gelir","Maaş, fatura","Nakit","23:31"],
+      ["2026-09-26","income",3872,"Gelir","Maaş, faturalar","Nakit","23:31"],
       ["2026-09-26","income",50,"Gelir","Hediyeler","Nakit","23:15"],
       ["2026-09-26","expense",380,"Araç","Yakıt","Nakit","23:01"],
       ["2026-09-26","income",65,"Gelir","Hediyeler","Nakit","21:13"],
@@ -794,26 +755,26 @@
       ["2026-09-26","expense",180,"Yiyecek & İçecek","Restoran, fast-food","Nakit","18:06"],
       ["2026-09-26","expense",1137,"Finansal harcamalar","Vergiler","Nakit","16:36"],
       ["2026-09-26","expense",250,"Gelir","Hediyeler","Nakit","14:30"],
-      ["2026-09-25","income",3555,"Gelir","Maaş, fatura","Nakit","23:10"],
-      ["2026-09-25","expense",90,"Yiyecek & İçecek","Market ürünleri","Nakit","22:14"],
+      ["2026-09-25","income",3555,"Gelir","Maaş, faturalar","Nakit","23:10"],
+      ["2026-09-25","expense",90,"Yiyecek & İçecek","Market alışverişi","Nakit","22:14"],
       ["2026-09-25","expense",365,"Araç","Yakıt","Nakit","22:13"],
       ["2026-09-25","expense",180,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:10"],
       ["2026-09-25","expense",400,"Gelir","Hediyeler","Nakit","18:10"],
       ["2026-09-25","expense",3525,"Yatırımlar","Finansal yatırımlar","Nakit","18:09"],
       ["2026-09-25","income",23,"Gelir","Hediyeler","Nakit","17:59"],
-      ["2026-09-25","expense",15,"Yiyecek & İçecek","Market ürünleri","Nakit","17:59"],
+      ["2026-09-25","expense",15,"Yiyecek & İçecek","Market alışverişi","Nakit","17:59"],
       ["2026-09-25","expense",8034,"Finansal harcamalar","Transfer, çekim","Nakit","13:10"],
       ["2026-09-25","income",8034,"Finansal harcamalar","Transfer, çekim","QNB","13:10"],
-      ["2026-09-24","expense",250,"Yiyecek & İçecek","Market ürünleri","Nakit","23:53"],
+      ["2026-09-24","expense",250,"Yiyecek & İçecek","Market alışverişi","Nakit","23:53"],
       ["2026-09-24","expense",400,"Araç","Yakıt","Nakit","23:52"],
       ["2026-09-24","expense",200,"Araç","Yakıt","Nakit","18:52"],
-      ["2026-09-24","expense",30,"Yiyecek & İçecek","Market ürünleri","Nakit","16:53"],
+      ["2026-09-24","expense",30,"Yiyecek & İçecek","Market alışverişi","Nakit","16:53"],
       ["2026-09-24","expense",3905,"Yatırımlar","Finansal yatırımlar","Nakit","08:38"],
-      ["2026-09-24","income",3183,"Gelir","Maaş, fatura","Nakit","08:31"],
+      ["2026-09-24","income",3183,"Gelir","Maaş, faturalar","Nakit","08:31"],
       ["2026-09-23","expense",130,"Gelir","Hediyeler","Nakit","08:51"],
       ["2026-09-23","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","08:50"],
       ["2026-09-23","expense",4348,"Yatırımlar","Finansal yatırımlar","Nakit","08:49"],
-      ["2026-09-23","income",310,"Gelir","Maaş, fatura","Nakit","08:30"],
+      ["2026-09-23","income",310,"Gelir","Maaş, faturalar","Nakit","08:30"],
       ["2026-09-22","expense",170,"İletişim, Bilgisayar","TV, Yayın","Nakit","12:02"],
       ["2026-09-22","expense",200,"Yiyecek & İçecek","Restoran, fast-food","Nakit","09:05"],
       ["2026-09-22","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","09:04"],
@@ -822,30 +783,30 @@
       ["2026-09-21","expense",195,"Yiyecek & İçecek","Restoran, fast-food","Nakit","18:07"],
       ["2026-09-21","income",60,"Gelir","Hediyeler","Nakit","15:40"],
       ["2026-09-21","expense",3050,"Yatırımlar","Finansal yatırımlar","Nakit","08:48"],
-      ["2026-09-21","income",2425,"Gelir","Maaş, fatura","Nakit","08:30"],
+      ["2026-09-21","income",2425,"Gelir","Maaş, faturalar","Nakit","08:30"],
       ["2026-09-21","expense",200,"Araç","Yakıt","Nakit","08:21"],
-      ["2026-09-20","income",910,"Gelir","Maaş, fatura","Nakit","08:36"],
-      ["2026-09-19","income",280,"Gelir","Maaş, fatura","Nakit","08:36"],
+      ["2026-09-20","income",910,"Gelir","Maaş, faturalar","Nakit","08:36"],
+      ["2026-09-19","income",280,"Gelir","Maaş, faturalar","Nakit","08:36"],
       ["2026-09-19","expense",130,"İletişim, Bilgisayar","TV, Yayın","Nakit","08:19"],
       ["2026-09-18","expense",3577,"Yatırımlar","Finansal yatırımlar","Nakit","08:47"],
-      ["2026-09-18","income",70,"Gelir","Maaş, fatura","Nakit","08:35"],
+      ["2026-09-18","income",70,"Gelir","Maaş, faturalar","Nakit","08:35"],
       ["2026-09-18","expense",200,"Yiyecek & İçecek","Restoran, fast-food","Nakit","08:24"],
       ["2026-09-18","expense",165,"Yiyecek & İçecek","Restoran, fast-food","Nakit","08:18"],
       ["2026-09-17","expense",200,"Yiyecek & İçecek","Restoran, fast-food","Nakit","23:41"],
       ["2026-09-17","expense",4200,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
-      ["2026-09-16","income",910,"Gelir","Maaş, fatura","Nakit","23:45"],
+      ["2026-09-16","income",910,"Gelir","Maaş, faturalar","Nakit","23:45"],
       ["2026-09-16","expense",300,"Araç","Yakıt","Nakit","22:02"],
       ["2026-09-16","expense",310,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:02"],
       ["2026-09-16","expense",5600,"Yatırımlar","Finansal yatırımlar","Nakit","22:02"],
       ["2026-09-16","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","02:42"],
-      ["2026-09-15","expense",60,"Yiyecek & İçecek","Market ürünleri","Nakit","22:03"],
+      ["2026-09-15","expense",60,"Yiyecek & İçecek","Market alışverişi","Nakit","22:03"],
       ["2026-09-15","expense",180,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:03"],
       ["2026-09-15","expense",20,"Yiyecek & İçecek","Restoran, fast-food","Nakit","18:48"],
       ["2026-09-15","expense",6246,"Yatırımlar","Finansal yatırımlar","Nakit","18:48"],
       ["2026-09-14","expense",165,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:44"],
       ["2026-09-14","expense",1800,"Yaşam & Eğlence","Piyango, kumar","Nakit","22:43"],
       ["2026-09-14","expense",350,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:42"],
-      ["2026-09-14","income",1026,"Gelir","Maaş, fatura","Nakit","18:28"],
+      ["2026-09-14","income",1026,"Gelir","Maaş, faturalar","Nakit","18:28"],
       ["2026-09-14","income",679,"Yatırımlar","Finansal yatırımlar","Nakit","18:27"],
       ["2026-09-14","expense",40,"İletişim, Bilgisayar","Yazılım, uygulamalar, oyunlar","Nakit","14:55"],
       ["2026-09-13","expense",80,"Yiyecek & İçecek","Restoran, fast-food","Nakit","15:00"],
@@ -855,28 +816,28 @@
       ["2026-09-12","expense",200,"Yaşam & Eğlence","Alkol, tütün","Nakit","22:00"],
       ["2026-09-12","expense",150,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:00"],
       ["2026-09-11","expense",140,"Yiyecek & İçecek","Restoran, fast-food","Nakit","22:00"],
-      ["2026-09-11","expense",90,"Yiyecek & İçecek","Market ürünleri","Nakit","18:57"],
+      ["2026-09-11","expense",90,"Yiyecek & İçecek","Market alışverişi","Nakit","18:57"],
       ["2026-09-11","expense",4380,"Yatırımlar","Finansal yatırımlar","Nakit","18:51"],
-      ["2026-09-11","income",3222,"Gelir","Maaş, fatura","Nakit","14:52"],
+      ["2026-09-11","income",3222,"Gelir","Maaş, faturalar","Nakit","14:52"],
       ["2026-09-11","income",20,"Gelir","Hediyeler","Nakit","13:07"],
       ["2026-09-11","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","12:32"],
       ["2026-09-11","expense",300,"Araç","Yakıt","Nakit","12:32"],
-      ["2026-09-10","income",210,"Gelir","Maaş, fatura","Nakit","23:58"],
-      ["2026-09-10","income",2880,"Gelir","Maaş, fatura","Nakit","22:21"],
+      ["2026-09-10","income",210,"Gelir","Maaş, faturalar","Nakit","23:58"],
+      ["2026-09-10","income",2880,"Gelir","Maaş, faturalar","Nakit","22:21"],
       ["2026-09-10","expense",3650,"Konut","Kira","Nakit","22:20"],
       ["2026-09-10","expense",200,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:05"],
       ["2026-09-10","income",100,"Gelir","Hediyeler","Nakit","19:27"],
-      ["2026-09-10","expense",75,"Yiyecek & İçecek","Market ürünleri","Nakit","18:34"],
+      ["2026-09-10","expense",75,"Yiyecek & İçecek","Market alışverişi","Nakit","18:34"],
       ["2026-09-10","expense",7300,"Yatırımlar","Finansal yatırımlar","Nakit","18:34"],
       ["2026-09-10","expense",400,"Araç","Yakıt","Nakit","15:09"],
       ["2026-09-10","income",90,"Gelir","Hediyeler","Nakit","15:09"],
-      ["2026-09-09","income",2100,"Gelir","Maaş, fatura","Nakit","23:06"],
+      ["2026-09-09","income",2100,"Gelir","Maaş, faturalar","Nakit","23:06"],
       ["2026-09-09","expense",205,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:04"],
       ["2026-09-09","income",7000,"Yatırımlar","Finansal yatırımlar","Nakit","19:30"],
       ["2026-09-09","income",20,"Gelir","Hediyeler","Nakit","19:27"],
       ["2026-09-09","expense",100,"Araç","Araç bakımı","Nakit","19:27"],
       ["2026-09-09","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","19:26"],
-      ["2026-09-08","income",1000,"Gelir","Maaş, fatura","Nakit","23:22"],
+      ["2026-09-08","income",1000,"Gelir","Maaş, faturalar","Nakit","23:22"],
       ["2026-09-08","income",3750,"Yatırımlar","Finansal yatırımlar","Nakit","18:21"],
       ["2026-09-07","expense",100,"Araç","Yakıt","Nakit","23:00"],
       ["2026-09-07","income",4000,"Gelir","Bağış, hediyeler","Nakit","00:57"],
@@ -885,16 +846,16 @@
       ["2026-09-03","expense",4000,"Yatırımlar","Finansal yatırımlar","Nakit","19:15"],
       ["2026-09-03","income",6000,"Yatırımlar","Finansal yatırımlar","Nakit","00:40"],
       ["2026-09-02","expense",280,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:39"],
-      ["2026-09-02","expense",400,"Ulaşım","Uzun mesafe","Nakit","02:36"],
+      ["2026-09-02","expense",400,"Ulaşım","Uzak mesafe","Nakit","02:36"],
       ["2026-09-02","expense",1380,"Yiyecek & İçecek","Restoran, fast-food","Nakit","02:36"],
       ["2026-09-01","income",5500,"Yatırımlar","Finansal yatırımlar","Nakit","18:12"],
       ["2026-09-01","expense",125,"Yaşam & Eğlence","Alkol, tütün","Nakit","18:11"],
 
-      // --- AĞUSTOS 2026 ---
+      // AĞUSTOS 2026
       ["2026-08-31","expense",5132,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
       ["2026-08-29","expense",6000,"Yaşam & Eğlence","Piyango, kumar","Nakit","23:18"],
       ["2026-08-28","income",5970,"Yatırımlar","Finansal yatırımlar","Nakit","18:19"],
-      ["2026-08-28","expense",100,"Yiyecek & İçecek","Market ürünleri","Nakit","03:18"],
+      ["2026-08-28","expense",100,"Yiyecek & İçecek","Market alışverişi","Nakit","03:18"],
       ["2026-08-27","expense",380,"Yiyecek & İçecek","Bar, kafe","Nakit","23:35"],
       ["2026-08-27","income",6275,"Yatırımlar","Finansal yatırımlar","Nakit","18:01"],
       ["2026-08-27","expense",200,"Yaşam & Eğlence","Alkol, tütün","Nakit","18:01"],
@@ -902,131 +863,131 @@
       ["2026-08-25","income",5000,"Yatırımlar","Finansal yatırımlar","Nakit","18:18"],
       ["2026-08-24","income",5066,"Yatırımlar","Finansal yatırımlar","Nakit","18:03"],
       ["2026-08-24","expense",285,"Yiyecek & İçecek","Restoran, fast-food","Nakit","00:50"],
-      ["2026-08-23","expense",140,"Yiyecek & İçecek","Market ürünleri","Nakit","23:03"],
+      ["2026-08-23","expense",140,"Yiyecek & İçecek","Market alışverişi","Nakit","23:03"],
       ["2026-08-22","income",1000,"Gelir","Hediyeler","Nakit","18:26"],
       ["2026-08-22","expense",27,"Gelir","Hediyeler","Nakit","18:24"],
       ["2026-08-22","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","18:24"],
       ["2026-08-21","income",4600,"Yatırımlar","Finansal yatırımlar","Nakit","18:18"],
       ["2026-08-21","income",500,"Gelir","Hediyeler","Nakit","17:21"],
       ["2026-08-20","income",2650,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
-      ["2026-08-19","expense",400,"Ulaşım","Uzun mesafe","Nakit","23:10"],
-      ["2026-08-19","income",140,"Gelir","Maaş, fatura","Nakit","21:53"],
+      ["2026-08-19","expense",400,"Ulaşım","Uzak mesafe","Nakit","23:10"],
+      ["2026-08-19","income",140,"Gelir","Maaş, faturalar","Nakit","21:53"],
       ["2026-08-19","expense",650,"Diğerleri","Wellness, güzellik","Nakit","18:52"],
       ["2026-08-19","income",1012,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
       ["2026-08-19","expense",60,"Yiyecek & İçecek","Restoran, fast-food","Nakit","16:51"],
-      ["2026-08-18","income",770,"Gelir","Maaş, fatura","Nakit","23:21"],
+      ["2026-08-18","income",770,"Gelir","Maaş, faturalar","Nakit","23:21"],
       ["2026-08-18","income",100,"Gelir","Hediyeler","Nakit","20:21"],
       ["2026-08-18","expense",300,"Araç","Yakıt","Nakit","18:20"],
       ["2026-08-18","income",915,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
-      ["2026-08-18","expense",50,"Yiyecek & İçecek","Market ürünleri","Nakit","15:13"],
-      ["2026-08-17","income",420,"Gelir","Maaş, fatura","Nakit","23:37"],
+      ["2026-08-18","expense",50,"Yiyecek & İçecek","Market alışverişi","Nakit","15:13"],
+      ["2026-08-17","income",420,"Gelir","Maaş, faturalar","Nakit","23:37"],
       ["2026-08-17","expense",148,"Yaşam & Eğlence","Alkol, tütün","Nakit","22:35"],
       ["2026-08-17","expense",240,"Yiyecek & İçecek","Restoran, fast-food","Nakit","18:35"],
       ["2026-08-17","expense",70,"Araç","Yakıt","Nakit","02:35"],
-      ["2026-08-16","income",7877,"Gelir","Maaş, fatura","Nakit","23:55"],
+      ["2026-08-16","income",7877,"Gelir","Maaş, faturalar","Nakit","23:55"],
       ["2026-08-16","expense",100,"Araç","Yakıt","Nakit","23:35"],
       ["2026-08-16","income",25,"Gelir","Hediyeler","Nakit","23:14"],
-      ["2026-08-16","expense",50,"Yiyecek & İçecek","Market ürünleri","Nakit","22:14"],
+      ["2026-08-16","expense",50,"Yiyecek & İçecek","Market alışverişi","Nakit","22:14"],
       ["2026-08-16","expense",59,"Yiyecek & İçecek","Restoran, fast-food","Nakit","14:10"],
-      ["2026-08-15","income",5120,"Gelir","Maaş, fatura","Nakit","23:56"],
+      ["2026-08-15","income",5120,"Gelir","Maaş, faturalar","Nakit","23:56"],
       ["2026-08-15","expense",2685,"Yaşam & Eğlence","Piyango, kumar","Nakit","22:08"],
       ["2026-08-15","expense",376,"Araç","Yakıt","Nakit","20:51"],
       ["2026-08-15","expense",60,"Yiyecek & İçecek","Restoran, fast-food","Nakit","17:33"],
       ["2026-08-15","expense",350,"Araç","Yakıt","Nakit","10:19"],
-      ["2026-08-14","income",3915,"Gelir","Maaş, fatura","Nakit","23:21"],
+      ["2026-08-14","income",3915,"Gelir","Maaş, faturalar","Nakit","23:21"],
       ["2026-08-14","expense",190,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:20"],
       ["2026-08-14","income",28,"Gelir","Hediyeler","Nakit","20:32"],
       ["2026-08-14","expense",123,"Yaşam & Eğlence","Alkol, tütün","Nakit","17:16"],
       ["2026-08-14","expense",65,"Yiyecek & İçecek","Restoran, fast-food","Nakit","15:20"],
       ["2026-08-14","expense",360,"Araç","Yakıt","Nakit","11:58"],
-      ["2026-08-13","income",4260,"Gelir","Maaş, fatura","Nakit","23:55"],
+      ["2026-08-13","income",4260,"Gelir","Maaş, faturalar","Nakit","23:55"],
       ["2026-08-13","expense",160,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:39"],
       ["2026-08-13","expense",350,"Araç","Yakıt","Nakit","21:39"],
-      ["2026-08-12","income",4795,"Gelir","Maaş, fatura","Nakit","23:48"],
+      ["2026-08-12","income",4795,"Gelir","Maaş, faturalar","Nakit","23:48"],
       ["2026-08-12","expense",205,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:01"],
       ["2026-08-12","expense",100,"Yiyecek & İçecek","Restoran, fast-food","Nakit","16:43"],
       ["2026-08-12","income",45,"Gelir","Hediyeler","Nakit","15:31"],
       ["2026-08-12","expense",390,"Araç","Yakıt","Nakit","10:17"],
-      ["2026-08-11","income",3200,"Gelir","Maaş, fatura","Nakit","23:18"],
+      ["2026-08-11","income",3200,"Gelir","Maaş, faturalar","Nakit","23:18"],
       ["2026-08-11","expense",200,"Yiyecek & İçecek","Restoran, fast-food","Nakit","21:16"],
       ["2026-08-11","expense",350,"Araç","Yakıt","Nakit","12:39"],
-      ["2026-08-10","income",3764,"Gelir","Maaş, fatura","Nakit","23:46"],
+      ["2026-08-10","income",3764,"Gelir","Maaş, faturalar","Nakit","23:46"],
       ["2026-08-10","expense",180,"Yiyecek & İçecek","Restoran, fast-food","Nakit","23:16"],
       ["2026-08-10","income",60,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
       ["2026-08-10","expense",60,"Yiyecek & İçecek","Restoran, fast-food","Nakit","15:55"],
-      ["2026-08-10","expense",60,"Yiyecek & İçecek","Market ürünleri","Nakit","15:38"],
+      ["2026-08-10","expense",60,"Yiyecek & İçecek","Market alışverişi","Nakit","15:38"],
       ["2026-08-10","expense",240,"Araç","Yakıt","Nakit","13:26"],
-      ["2026-08-09","income",1645,"Gelir","Maaş, fatura","Nakit","23:58"],
-      ["2026-08-09","expense",55,"Yiyecek & İçecek","Market ürünleri","Nakit","23:17"],
+      ["2026-08-09","income",1645,"Gelir","Maaş, faturalar","Nakit","23:58"],
+      ["2026-08-09","expense",55,"Yiyecek & İçecek","Market alışverişi","Nakit","23:17"],
       ["2026-08-09","expense",350,"Yaşam & Eğlence","Kültür, spor etkinlikleri","Nakit","23:17"],
       ["2026-08-09","income",50,"Gelir","Hediyeler","Nakit","22:37"],
       ["2026-08-09","expense",100,"Araç","Yakıt","Nakit","22:32"],
       ["2026-08-09","income",20,"Gelir","Hediyeler","Nakit","22:31"],
-      ["2026-08-09","expense",10,"Yiyecek & İçecek","Market ürünleri","Nakit","22:31"],
+      ["2026-08-09","expense",10,"Yiyecek & İçecek","Market alışverişi","Nakit","22:31"],
       ["2026-08-09","income",50,"Gelir","Hediyeler","Nakit","20:24"],
-      ["2026-08-09","expense",16,"Yiyecek & İçecek","Market ürünleri","Nakit","20:24"],
-      ["2026-08-08","income",490,"Gelir","Maaş, fatura","Nakit","23:57"],
+      ["2026-08-09","expense",16,"Yiyecek & İçecek","Market alışverişi","Nakit","20:24"],
+      ["2026-08-08","income",490,"Gelir","Maaş, faturalar","Nakit","23:57"],
       ["2026-08-08","expense",100,"Araç","Yakıt","Nakit","23:04"],
-      ["2026-08-08","expense",650,"Ulaşım","Uzun mesafe","Nakit","19:03"],
+      ["2026-08-08","expense",650,"Ulaşım","Uzak mesafe","Nakit","19:03"],
       ["2026-08-08","expense",40,"Ulaşım","Toplu taşıma","Nakit","19:02"],
       ["2026-08-08","expense",40,"Ulaşım","Toplu taşıma","Nakit","17:46"],
       ["2026-08-08","income",600,"Gelir","Hediyeler","Nakit","17:02"],
-      ["2026-08-08","expense",650,"Ulaşım","Uzun mesafe","Nakit","07:37"],
-      ["2026-08-08","expense",370,"Ulaşım","Uzun mesafe","Nakit","07:37"],
-      ["2026-08-07","income",1330,"Gelir","Maaş, fatura","Nakit","23:58"],
+      ["2026-08-08","expense",650,"Ulaşım","Uzak mesafe","Nakit","07:37"],
+      ["2026-08-08","expense",370,"Ulaşım","Uzak mesafe","Nakit","07:37"],
+      ["2026-08-07","income",1330,"Gelir","Maaş, faturalar","Nakit","23:58"],
       ["2026-08-07","expense",138,"Yaşam & Eğlence","Alkol, tütün","Nakit","19:36"],
-      ["2026-08-07","expense",73,"Yiyecek & İçecek","Market ürünleri","Nakit","18:36"],
+      ["2026-08-07","expense",73,"Yiyecek & İçecek","Market alışverişi","Nakit","18:36"],
       ["2026-08-07","expense",12,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
       ["2026-08-07","expense",200,"Araç","Yakıt","Nakit","02:20"],
-      ["2026-08-06","income",1470,"Gelir","Maaş, fatura","Nakit","23:59"],
+      ["2026-08-06","income",1470,"Gelir","Maaş, faturalar","Nakit","23:59"],
       ["2026-08-06","expense",200,"Araç","Yakıt","Nakit","18:17"],
       ["2026-08-06","income",500,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
       ["2026-08-05","expense",100,"Yiyecek & İçecek","Restoran, fast-food","Nakit","23:30"],
-      ["2026-08-05","income",1476,"Gelir","Maaş, fatura","Nakit","23:28"],
+      ["2026-08-05","income",1476,"Gelir","Maaş, faturalar","Nakit","23:28"],
       ["2026-08-05","expense",216,"Yatırımlar","Finansal yatırımlar","Nakit","23:27"],
       ["2026-08-05","expense",113,"Yaşam & Eğlence","Alkol, tütün","Nakit","23:25"],
       ["2026-08-05","expense",100,"Araç","Yakıt","Nakit","23:25"],
       ["2026-08-05","expense",150,"Araç","Yakıt","Nakit","23:24"],
-      ["2026-08-05","income",70,"Gelir","Maaş, fatura","Nakit","16:48"],
+      ["2026-08-05","income",70,"Gelir","Maaş, faturalar","Nakit","16:48"],
       ["2026-08-04","income",340,"Yatırımlar","Finansal yatırımlar","Nakit","21:10"],
       ["2026-08-03","expense",744,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
-      ["2026-08-02","income",5967,"Gelir","Maaş, fatura","Nakit","23:59"],
+      ["2026-08-02","income",5967,"Gelir","Maaş, faturalar","Nakit","23:59"],
       ["2026-08-02","expense",113,"Yaşam & Eğlence","Alkol, tütün","Nakit","21:37"],
       ["2026-08-02","expense",180,"Yiyecek & İçecek","Restoran, fast-food","Nakit","19:49"],
       ["2026-08-02","expense",200,"Araç","Yakıt","Nakit","15:24"],
-      ["2026-08-01","income",4106,"Gelir","Maaş, fatura","Nakit","23:57"],
+      ["2026-08-01","income",4106,"Gelir","Maaş, faturalar","Nakit","23:57"],
       ["2026-08-01","expense",185,"Araç","Yakıt","Nakit","22:20"],
       ["2026-08-01","income",130,"Gelir","Hediyeler","Nakit","19:30"],
       ["2026-08-01","expense",48,"Yiyecek & İçecek","Restoran, fast-food","Nakit","16:36"],
       ["2026-08-01","income",50,"Gelir","Hediyeler","Nakit","13:33"],
       ["2026-08-01","expense",170,"Araç","Yakıt","Nakit","11:33"],
 
-      // --- TEMMUZ 2026 ---
-      ["2026-07-31","income",3676,"Gelir","Maaş, fatura","Nakit","23:57"],
+      // TEMMUZ 2026
+      ["2026-07-31","income",3676,"Gelir","Maaş, faturalar","Nakit","23:57"],
       ["2026-07-31","expense",824,"Yatırımlar","Finansal yatırımlar","Nakit","18:00"],
       ["2026-07-31","expense",35,"Gelir","Hediyeler","Nakit","17:27"],
       ["2026-07-31","expense",75,"Yiyecek & İçecek","Restoran, fast-food","Nakit","15:22"],
       ["2026-07-31","income",20,"Gelir","Hediyeler","Nakit","12:14"],
       ["2026-07-31","expense",200,"Araç","Yakıt","Nakit","11:26"],
-      ["2026-07-30","income",4161,"Gelir","Maaş, fatura","Nakit","23:58"],
+      ["2026-07-30","income",4161,"Gelir","Maaş, faturalar","Nakit","23:58"],
       ["2026-07-30","expense",205,"Yiyecek & İçecek","Restoran, fast-food","Nakit","19:47"],
       ["2026-07-30","expense",920,"Yatırımlar","Finansal yatırımlar","Nakit","19:20"],
-      ["2026-07-30","expense",45,"Yiyecek & İçecek","Market ürünleri","Nakit","18:50"],
+      ["2026-07-30","expense",45,"Yiyecek & İçecek","Market alışverişi","Nakit","18:50"],
       ["2026-07-30","income",10,"Gelir","Hediyeler","Nakit","14:06"],
       ["2026-07-30","expense",320,"Araç","Yakıt","Nakit","11:15"],
-      ["2026-07-29","income",3476,"Gelir","Maaş, fatura","Nakit","23:55"],
+      ["2026-07-29","income",3476,"Gelir","Maaş, faturalar","Nakit","23:55"],
       ["2026-07-29","expense",200,"Araç","Yakıt","Nakit","17:43"],
       ["2026-07-29","income",836,"Yatırımlar","Finansal yatırımlar","Nakit","17:32"],
-      ["2026-07-29","expense",13,"Yiyecek & İçecek","Market ürünleri","Nakit","17:32"],
+      ["2026-07-29","expense",13,"Yiyecek & İçecek","Market alışverişi","Nakit","17:32"],
       ["2026-07-29","income",10,"Gelir","Hediyeler","Nakit","12:53"],
-      ["2026-07-28","income",4465,"Gelir","Maaş, fatura","Nakit","02:18"],
+      ["2026-07-28","income",4465,"Gelir","Maaş, faturalar","Nakit","02:18"],
       ["2026-07-28","income",50,"Gelir","Hediyeler","Nakit","02:17"],
       ["2026-07-28","income",760,"Yatırımlar","Finansal yatırımlar","Nakit","02:17"],
       ["2026-07-28","expense",384,"Araç","Yakıt","Nakit","02:17"],
       ["2026-07-28","expense",205,"Yiyecek & İçecek","Restoran, fast-food","Nakit","02:16"],
       ["2026-07-28","expense",95,"Yiyecek & İçecek","Restoran, fast-food","Nakit","02:15"],
-      ["2026-07-28","expense",105,"Yiyecek & İçecek","Market ürünleri","Nakit","02:15"],
-      ["2026-07-27","income",3309,"Gelir","Maaş, fatura","Nakit","02:15"],
+      ["2026-07-28","expense",105,"Yiyecek & İçecek","Market alışverişi","Nakit","02:15"],
+      ["2026-07-27","income",3309,"Gelir","Maaş, faturalar","Nakit","02:15"],
       ["2026-07-27","income",20,"Gelir","Hediyeler","Nakit","02:14"],
       ["2026-07-27","expense",16,"Yiyecek & İçecek","Restoran, fast-food","Nakit","02:13"],
       ["2026-07-27","expense",79,"Yiyecek & İçecek","Restoran, fast-food","Nakit","02:13"],
@@ -1043,10 +1004,7 @@
     let donutChartInstance = null;
     let detailChartInstance = null;
     let cashFlowDailyInstance = null;
-    let analyticsNetInstance = null;
-    let analyticsBarInstance = null;
 
-    // --- SEÇİLİ AYA GÖRE FİLTRELEME MOTORU ---
     function getActiveTransactions() {
       return transactions.filter(t => {
         const d = new Date(t.created_at);
@@ -1063,9 +1021,8 @@
       if (window.activeTab === 'detail' && window.viewingAccountId) openAccountDetail(window.viewingAccountId, false);
     }
 
-    // --- KAYIT SİLME MOTORU (HER YERDEN KALDIRIR & BAKİYEYİ DÜZELTİR) ---
     window.deleteTransaction = async function(id) {
-      if (!confirm('Bu kaydı silmek istediğinize emin misiniz? Bakiye, nakit akışı ve tüm grafikler anında güncellenecektir.')) return;
+      if (!confirm('Bu kaydı silmek istediğinize emin misiniz? Bakiye, grafik ve raporlar hemen güncellenir.')) return;
 
       const idx = transactions.findIndex(t => t.id === id);
       if (idx === -1) return;
@@ -1093,7 +1050,6 @@
       renderAllViews();
     };
 
-    // --- DİNAMİK BAKİYE ZAMAN SERİSİ ---
     function buildDynamicBalanceHistory(targetAccountId) {
       let currentBal = 0;
       if (targetAccountId) {
@@ -1137,7 +1093,6 @@
       return { labels, data, current: currentBal };
     }
 
-    // --- ANINDA HESAP OLUŞTURMA ---
     window.saveNewAccount = async function() {
       const name = document.getElementById('acc-name-input').value.trim();
       if (!name) return alert('Lütfen hesap adını girin!');
@@ -1174,7 +1129,6 @@
       }
     };
 
-    // --- CANLI İŞLEM KAYDI ---
     async function saveRecord() {
       const amt = parseFloat(document.getElementById('input-amount').value);
       if (!amt || amt <= 0) return alert('Lütfen geçerli bir tutar girin');
@@ -1182,7 +1136,6 @@
       const accId = document.getElementById('select-account').value;
       const cat = document.getElementById('select-category').value;
       const sub = document.getElementById('select-sub').value;
-      const note = document.getElementById('input-note').value;
 
       const a = accounts.find(x => x.id === accId);
       if (a) {
@@ -1204,7 +1157,6 @@
         amount: amt,
         category: cat,
         sub_category: sub,
-        note: note,
         created_at: txDate.toISOString()
       };
 
@@ -1215,13 +1167,10 @@
       }
 
       document.getElementById('input-amount').value = '';
-      document.getElementById('input-note').value = '';
       closeRecordModal();
-
       renderAllViews();
     }
 
-    // --- DASHBOARD: TREND GRAFİĞİ ---
     function renderTrendChart(targetAccountId) {
       if (trendChartInstance) trendChartInstance.destroy();
       const ctx = document.getElementById('trendChart')?.getContext('2d');
@@ -1280,7 +1229,6 @@
       });
     }
 
-    // --- HESAP DETAYI: 0 ÇİZGİSİ MERKEZLİ GRAFİK ---
     function openAccountDetail(accId, shouldSwitch = true) {
       viewingAccountId = accId;
       const a = accounts.find(x => x.id === accId);
@@ -1319,12 +1267,7 @@
             maintainAspectRatio: false,
             animation: { duration: 550 },
             plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (c) => 'Bakiye: ' + (c.raw < 0 ? '-' : '') + '₺' + Math.abs(c.raw).toLocaleString('tr-TR', { minimumFractionDigits: 2 })
-                }
-              }
+              legend: { display: false }
             },
             scales: {
               x: { grid: { color: '#F8FAFC' }, ticks: { font: { size: 10 }, color: '#94A3B8' } },
@@ -1350,7 +1293,6 @@
       if (shouldSwitch) switchTab('detail');
     }
 
-    // --- NAKİT AKIŞI & ANALİTİK MOTORU ---
     function renderAnalyticsFull() {
       const activeTxs = getActiveTransactions();
       let inc = 0, exp = 0;
@@ -1362,15 +1304,10 @@
 
       const net = inc - exp;
 
-      // Özel Ağustos 2026 Metrikleri Eşleşmesi
-      let growthText = "↗ 279%";
-      if (window.activeMonth === 8) {
-        growthText = "↗ 279%";
-      } else if (window.activeMonth === 9) {
-        growthText = "↘ -134%";
-      } else if (window.activeMonth === 7) {
-        growthText = "↗ +100%";
-      }
+      let growthText = "↗ +279%";
+      if (window.activeMonth === 8) growthText = "↗ +279%";
+      else if (window.activeMonth === 9) growthText = "↘ -134%";
+      else if (window.activeMonth === 7) growthText = "↗ +100%";
 
       const netEl = document.getElementById('cf-net-amount');
       if (netEl) {
@@ -1388,12 +1325,9 @@
       if (grEl) grEl.innerText = growthText;
 
       renderDailyCashFlowChart();
-      renderAnalyticsNetChart();
-      renderAnalyticsBarChart();
       renderAnalyticsTable();
     }
 
-    // --- 0-MERKEZLİ GÜNLÜK NAKİT AKIŞI ÇUBUK GRAFİĞİ (-8B ile +8B) ---
     function renderDailyCashFlowChart() {
       if (cashFlowDailyInstance) cashFlowDailyInstance.destroy();
       const ctx = document.getElementById('cashFlowDailyChart')?.getContext('2d');
@@ -1403,9 +1337,7 @@
       const dayMap = {};
       const daysInMonth = new Date(window.activeYear, window.activeMonth, 0).getDate();
 
-      for (let i = 1; i <= daysInMonth; i++) {
-        dayMap[i] = 0;
-      }
+      for (let i = 1; i <= daysInMonth; i++) dayMap[i] = 0;
 
       activeTxs.forEach(t => {
         const d = new Date(t.created_at).getDate();
@@ -1440,18 +1372,10 @@
           maintainAspectRatio: false,
           animation: { duration: 550 },
           plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (c) => (c.raw < 0 ? '-' : '+') + '₺' + Math.abs(c.raw).toLocaleString('tr-TR')
-              }
-            }
+            legend: { display: false }
           },
           scales: {
-            x: {
-              grid: { display: false },
-              ticks: { font: { size: 9 }, color: '#94A3B8' }
-            },
+            x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94A3B8' } },
             y: {
               min: -8000,
               max: 8000,
@@ -1463,93 +1387,8 @@
                 stepSize: 4000,
                 font: { size: 9 },
                 color: '#94A3B8',
-                callback: (v) => {
-                  if (v === 0) return '0';
-                  return (v < 0 ? '-' : '') + Math.abs(v / 1000) + ' B';
-                }
+                callback: (v) => (v === 0 ? '0' : (v < 0 ? '-' : '') + Math.abs(v / 1000) + ' B')
               }
-            }
-          }
-        }
-      });
-    }
-
-    function renderAnalyticsNetChart() {
-      if (analyticsNetInstance) analyticsNetInstance.destroy();
-      const ctx = document.getElementById('analyticsNetChart')?.getContext('2d');
-      if (!ctx) return;
-
-      const history = buildDynamicBalanceHistory(null);
-      const absVal = Math.max(Math.abs(Math.min(...history.data, 0)), Math.abs(Math.max(...history.data, 0)), 5000) * 1.3;
-
-      analyticsNetInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: history.labels,
-          datasets: [{
-            label: 'Net Varlık/Borç',
-            data: history.data,
-            borderColor: '#2EB85C',
-            backgroundColor: 'rgba(46,184,92,0.1)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2.5,
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94A3B8' } },
-            y: {
-              min: -absVal,
-              max: absVal,
-              grid: {
-                color: (c) => (c.tick && c.tick.value === 0 ? '#0F172A' : '#F1F5F9'),
-                lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1)
-              },
-              ticks: {
-                font: { size: 9 },
-                callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function renderAnalyticsBarChart() {
-      if (analyticsBarInstance) analyticsBarInstance.destroy();
-      const ctx = document.getElementById('analyticsBarChart')?.getContext('2d');
-      if (!ctx) return;
-
-      const activeTxs = getActiveTransactions();
-      let inc = 0, exp = 0;
-      activeTxs.forEach(t => {
-        const v = parseFloat(t.amount);
-        if (t.type === 'income') inc += v;
-        else exp += v;
-      });
-
-      analyticsBarInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: [`${MONTH_NAMES[window.activeMonth]} ${window.activeYear}`],
-          datasets: [
-            { label: 'Gelir', data: [inc], backgroundColor: '#2EB85C', borderRadius: 6 },
-            { label: 'Gider', data: [exp], backgroundColor: '#EA4335', borderRadius: 6 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: {
-            y: {
-              grid: { color: '#F1F5F9' },
-              ticks: { callback: (v) => '₺' + v.toLocaleString('tr-TR') }
             }
           }
         }
@@ -1607,7 +1446,6 @@
       });
     }
 
-    // --- STANDART VERİ VE ARAYÜZ YÖNETİMİ ---
     function renderDashboardAccounts() {
       const deskCont = document.getElementById('desktop-accounts-container');
       if (deskCont) {
@@ -1842,7 +1680,6 @@
       }
     }
 
-    // --- KAYITLAR LİSTESİ VE HER SATIRDA ÇÖP KUTUSU (SİLME) BUTONU ---
     function renderRecordsPage() {
       const cont = document.getElementById('records-full-list');
       if (!cont) return;
@@ -1925,7 +1762,6 @@
       });
     }
 
-    // --- BAŞLANGIÇ VERİ YÜKLEMESİ ---
     async function loadData() {
       const localAccs = JSON.parse(localStorage.getItem('bb_wallet_accounts') || '[]');
       if (localAccs.length > 0) {
@@ -1942,17 +1778,16 @@
         amount: t[2],
         category: t[3],
         sub_category: t[4],
-        note: '',
         created_at: t[0] + "T" + t[6] + ":00Z"
       }));
 
       const localTxs = JSON.parse(localStorage.getItem('bb_wallet_txs') || '[]');
-      if (localTxs.length > 0 && localStorage.getItem('bb_wallet_synced_v6')) {
+      if (localTxs.length > 0 && localStorage.getItem('bb_wallet_synced_pdf_v1')) {
         transactions = localTxs;
       } else {
         transactions = parsedTransactions;
         localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
-        localStorage.setItem('bb_wallet_synced_v6', 'true');
+        localStorage.setItem('bb_wallet_synced_pdf_v1', 'true');
       }
 
       updateMonthLabels();
@@ -1967,7 +1802,7 @@
             renderAllViews();
           }
         } catch (e) {
-          console.warn("Supabase bağlantısı:", e);
+          console.warn("Supabase bağlantı kontrolü:", e);
         }
       }
     }
