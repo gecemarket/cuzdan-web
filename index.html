@@ -3,359 +3,520 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Wallet</title>
+  <title>Wallet by BudgetBakers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <meta name="theme-color" content="#121316">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #EDF1F7; }
+    .gauge-bg { stroke: #E2E8F0; }
+  </style>
 </head>
-<body class="bg-[#121316] text-[#E4E6EB] min-h-screen pb-28 font-sans select-none">
+<body class="text-slate-800 antialiased min-h-screen pb-16">
 
-  <!-- Üst Başlık & Durum Çubuğu -->
-  <header class="p-4 bg-[#18191E] border-b border-[#24252B] sticky top-0 z-20 flex justify-between items-center">
-    <div>
-      <span class="text-[11px] text-slate-400">Genel Bakış</span>
-      <h1 class="text-base font-bold text-white">Wallet Hesaplarım</h1>
+  <!-- 1. ÜST NAVİGASYON (NAVBAR) -->
+  <header class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+    <div class="flex items-center space-x-6 overflow-x-auto py-1">
+      <div class="flex items-center space-x-2 shrink-0 pr-2">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-black text-lg shadow-sm">
+          W
+        </div>
+        <span class="font-bold text-slate-800 text-sm hidden md:inline">Wallet</span>
+      </div>
+
+      <nav class="flex items-center space-x-1.5 shrink-0 text-[13px] font-medium text-slate-600">
+        <button class="px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 font-semibold border border-slate-200 shadow-xs">Kontrol Paneli</button>
+        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition">Hesaplar</button>
+        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition">Kayıtlar</button>
+        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition">Analitik</button>
+        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition hidden sm:inline">Yatırımlar</button>
+        <button class="px-3 py-1.5 rounded-full hover:bg-slate-50 transition hidden sm:inline">İçe Aktarılanlar</button>
+      </nav>
     </div>
-    <div id="status-badge" class="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-      ⏳ Bağlanıyor...
+
+    <div class="flex items-center space-x-3 shrink-0">
+      <span id="sync-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+        ● Canlı
+      </span>
+      <button onclick="openModal()" class="bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-medium text-[13px] px-4 py-1.5 rounded-md shadow-xs transition flex items-center space-x-1 cursor-pointer">
+        <span class="text-base font-bold leading-none">+</span>
+        <span>Kayıt</span>
+      </button>
     </div>
   </header>
 
-  <!-- Uyarı / Bildirim Kutusu -->
-  <div id="alert-box" class="hidden mx-4 mt-3 p-3 rounded-xl text-xs font-semibold"></div>
+  <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-5 space-y-4">
 
-  <main class="max-w-md mx-auto p-4 space-y-4">
+    <!-- 2. HESAP KARTLARI BARI -->
+    <div class="flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none">
+      <div id="accounts-container" class="flex items-center space-x-3 shrink-0"></div>
+      <button onclick="addAccountPrompt()" class="shrink-0 h-[62px] px-5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-xs font-semibold flex items-center space-x-1 transition bg-white/50 cursor-pointer">
+        <span class="text-base font-bold">+</span>
+        <span>Hesap Ekle</span>
+      </button>
+    </div>
 
-    <!-- HESAPLAR -->
-    <div>
-      <div class="flex justify-between items-center mb-2 px-1">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hesaplar</span>
-        <button onclick="filterAccount(null)" class="text-xs text-sky-400 hover:underline">Tümünü seç</button>
-      </div>
-      <div id="accounts-grid" class="grid grid-cols-2 gap-2.5">
-        <div class="p-3 bg-[#1c1d24] rounded-2xl border border-[#282932] text-xs text-slate-500">Yükleniyor...</div>
+    <!-- 3. TARİH SEÇİCİ -->
+    <div class="flex justify-center items-center py-1">
+      <div class="bg-white border border-slate-200 shadow-2xs rounded-full px-4 py-1 flex items-center space-x-4 text-xs font-semibold text-slate-700">
+        <button class="text-slate-400 hover:text-slate-700 px-1">&lt;</button>
+        <span>Bu ay</span>
+        <button class="text-slate-400 hover:text-slate-700 px-1">&gt;</button>
       </div>
     </div>
 
-    <!-- NAKİT AKIŞI -->
-    <div class="bg-[#1c1d24] p-4 rounded-3xl border border-[#282932] space-y-2">
-      <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
-        <span>Nakit Akışı (Net)</span>
-        <span id="cashflow-net" class="text-white font-bold text-sm">₺0,00</span>
+    <!-- 4. ANA DASHBOARD WIDGETLARI -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <!-- KONTROL PANELİ İBRELERİ -->
+      <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xs font-bold text-slate-600 tracking-wider">Kontrol Paneli</h2>
+          <div class="text-slate-400 text-xs flex space-x-2">
+            <span>🎛</span><span>🗑</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center py-4">
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-12" viewBox="0 0 100 60">
+              <path class="gauge-bg" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke-width="8" stroke-linecap="round"/>
+              <path d="M10,50 A40,40 0 0,1 40,15" fill="none" stroke="#EA4335" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Bakiye</span>
+            <span id="gauge-bal" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-12" viewBox="0 0 100 60">
+              <path class="gauge-bg" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke-width="8" stroke-linecap="round"/>
+              <path d="M10,50 A40,40 0 0,1 70,22" fill="none" stroke="#2EB85C" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Nakit Akış</span>
+            <span id="gauge-flow" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-12" viewBox="0 0 100 60">
+              <path class="gauge-bg" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke-width="8" stroke-linecap="round"/>
+              <path d="M10,50 A40,40 0 0,1 55,11" fill="none" stroke="#F59E0B" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Harcama</span>
+            <span id="gauge-exp" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-3 text-center">
+          <span class="text-[11px] text-slate-400 font-medium">Bu dönem verileri</span>
+        </div>
       </div>
-      <div class="h-2.5 w-full bg-[#282932] rounded-full overflow-hidden flex">
-        <div id="income-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 50%"></div>
-        <div id="expense-bar" class="bg-rose-500 h-full transition-all duration-300" style="width: 50%"></div>
+
+      <!-- BAKİYE EĞİLİMİ -->
+      <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
+        <div class="flex justify-between items-center mb-1">
+          <h2 class="text-xs font-bold text-slate-600 tracking-wider">Bakiye Eğilimi</h2>
+          <div class="text-slate-400 text-xs flex space-x-2">
+            <span>⚙️</span><span>🗑</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-baseline mb-2">
+          <div>
+            <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
+            <span id="trend-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
+          </div>
+          <span class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+            Önceki Döneme Karşı <b class="text-slate-500">⊖ 0%</b>
+          </span>
+        </div>
+
+        <div class="h-32 w-full mt-2">
+          <canvas id="trendChart"></canvas>
+        </div>
       </div>
-      <div class="flex justify-between text-xs pt-1">
-        <span class="text-emerald-400 font-medium">Gelir: <b id="income-total">₺0,00</b></span>
-        <span class="text-rose-400 font-medium">Gider: <b id="expense-total">₺0,00</b></span>
+
+      <!-- GİDER YAPISI -->
+      <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-1">
+          <h2 class="text-xs font-bold text-slate-600 tracking-wider">Gider Yapısı</h2>
+          <div class="text-slate-400 text-xs flex space-x-2">
+            <span>⚙️</span><span>🗑</span>
+          </div>
+        </div>
+
+        <div id="expense-empty" class="text-center py-10 text-slate-400 text-xs">
+          Seçili zaman aralığında kayıtlı veri yok.
+        </div>
+
+        <div id="expense-chart-box" class="hidden relative w-36 h-36 mx-auto my-2">
+          <canvas id="donutChart"></canvas>
+        </div>
+
+        <div id="expense-legend" class="text-[11px] text-slate-500 flex flex-wrap gap-2 justify-center mt-2"></div>
+      </div>
+
+    </div>
+
+    <!-- 5. SON İŞLEMLER LİSTESİ -->
+    <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xs font-bold text-slate-600 tracking-wider uppercase">Son Kayıtlar Genel Bakış</h2>
+        <span class="text-xs text-slate-400">Son 30 Gün</span>
+      </div>
+      <div id="tx-table" class="divide-y divide-slate-100">
+        <div class="text-center py-6 text-xs text-slate-400">Yükleniyor...</div>
       </div>
     </div>
 
-    <!-- SON HAREKETLER -->
-    <div class="bg-[#1c1d24] p-4 rounded-3xl border border-[#282932]">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Son Kayıtlar</div>
-      <div id="tx-list" class="space-y-2.5">
-        <div class="text-center text-slate-500 py-6 text-xs">Yükleniyor...</div>
-      </div>
-    </div>
+  </div>
 
-  </main>
-
-  <!-- SAĞ ALTTA SABİT '+' BUTONU -->
-  <button onclick="openModal()" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-500 hover:bg-sky-400 active:scale-90 text-white rounded-2xl shadow-2xl flex items-center justify-center text-3xl font-light z-30 transition cursor-pointer">
-    +
-  </button>
-
-  <!-- İŞLEM EKLEME MODALI -->
-  <div id="tx-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-[#1c1d24] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 border border-[#2d2e38] space-y-3.5">
-      <div class="flex justify-between items-center">
-        <h3 class="text-sm font-bold text-white">Yeni Kayıt</h3>
-        <button onclick="closeModal()" class="text-slate-400 text-2xl font-bold px-2">&times;</button>
+  <!-- KAYIT EKLEME MODAL PENCERESİ -->
+  <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-sm text-slate-800">+ Yeni Kayıt Ekle</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
       </div>
 
-      <!-- Tür Seçimi -->
-      <div class="grid grid-cols-2 gap-2 bg-[#121316] p-1 rounded-xl">
-        <button id="modal-exp-btn" type="button" onclick="setModalType('expense')" class="py-2 rounded-lg font-semibold text-xs bg-rose-500 text-white">Gider (-)</button>
-        <button id="modal-inc-btn" type="button" onclick="setModalType('income')" class="py-2 rounded-lg font-semibold text-xs text-slate-400">Gelir (+)</button>
+      <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-lg">
+        <button id="btn-exp" type="button" onclick="setType('expense')" class="py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs">Gider</button>
+        <button id="btn-inc" type="button" onclick="setType('income')" class="py-2 text-xs font-bold rounded-md text-slate-600">Gelir</button>
       </div>
 
-      <!-- Tutar Girişi -->
       <div>
-        <label class="text-[11px] text-slate-400 mb-1 block">Tutar</label>
-        <input id="modal-amount" type="number" step="0.01" inputmode="decimal" placeholder="0.00" class="w-full bg-[#121316] border border-[#2b2c37] rounded-xl p-3 text-xl font-bold text-white text-center focus:outline-none focus:border-sky-500">
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Tutar (₺)</label>
+        <input id="input-amount" type="number" step="0.01" inputmode="decimal" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xl font-bold text-slate-800 text-center focus:outline-none focus:border-emerald-500">
       </div>
 
-      <!-- Hesap Seçimi -->
       <div>
-        <label class="text-[11px] text-slate-400 mb-1 block">Hesap</label>
-        <select id="modal-account" class="w-full bg-[#121316] border border-[#2b2c37] rounded-xl p-2.5 text-xs text-white focus:outline-none"></select>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Hesap</label>
+        <select id="select-account" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
       </div>
 
-      <!-- Kategori Seçimi -->
       <div>
-        <label class="text-[11px] text-slate-400 mb-1 block">Kategori</label>
-        <select id="modal-category" onchange="updateSubCategories()" class="w-full bg-[#121316] border border-[#2b2c37] rounded-xl p-2.5 text-xs text-white focus:outline-none"></select>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Kategori</label>
+        <select id="select-category" onchange="updateSubs()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
       </div>
 
-      <!-- Alt Kategori -->
       <div>
-        <label class="text-[11px] text-slate-400 mb-1 block">Alt Kategori</label>
-        <select id="modal-subcategory" class="w-full bg-[#121316] border border-[#2b2c37] rounded-xl p-2.5 text-xs text-white focus:outline-none"></select>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Alt Kategori</label>
+        <select id="select-sub" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
       </div>
 
-      <!-- Not / Açıklama -->
       <div>
-        <label class="text-[11px] text-slate-400 mb-1 block">Not (İsteğe bağlı)</label>
-        <input id="modal-note" type="text" placeholder="Örn: Market harcaması" class="w-full bg-[#121316] border border-[#2b2c37] rounded-xl p-2.5 text-xs text-white focus:outline-none">
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Açıklama / Not</label>
+        <input id="input-note" type="text" placeholder="İsteğe bağlı not..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none">
       </div>
 
-      <button id="modal-save-btn" type="button" onclick="submitTransaction()" class="w-full py-3 bg-sky-500 hover:bg-sky-400 active:scale-95 text-white font-semibold rounded-xl text-xs transition shadow-lg mt-2">
+      <button id="save-btn" onclick="saveRecord()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-sm cursor-pointer">
         Kaydet
       </button>
     </div>
   </div>
 
   <script>
-    // --- SUPABASE BAĞLANTISI ---
-    const SUPABASE_URL = "https://ijmdrizpzfggmvnricde.supabase.co"; 
+    // --- SUPABASE BAĞLANTISI (BİLGİLERİNİZ DOLDURULDU) ---
+    const SUPABASE_URL = "https://ljmdrizpzfggmvnricde.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_hyJxzInEszidGUHRbPAJhg_apYW0_hu";
 
-    let supabaseClient = null;
-    try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch (e) {
-      alert("Supabase başlatılamadı: " + e.message);
-    }
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const CATEGORIES = {
-      "Yiyecek & İçecek": { color: "#ea580c", icon: "🍴", subs: ["Yiyecek & İçecek", "Bar, kafe", "Market alışverişi", "Restoran, fast-food"] },
-      "Alışveriş": { color: "#0284c7", icon: "🛍️", subs: ["Alışveriş", "Boş zaman", "Eczane, kozmetik", "Elektronik, aksesuar", "Ev, bahçe", "Hediyeler", "Kıyafet & ayakkabı"] },
-      "Konut": { color: "#f97316", icon: "🏠", subs: ["Konut", "Bakım, onarım", "Kira", "Faturalar"] },
-      "Ulaşım": { color: "#64748b", icon: "🚌", subs: ["Ulaşım", "Taksi", "Toplu taşıma", "Uzak mesafe"] },
-      "Araç": { color: "#c026d3", icon: "🚗", subs: ["Araç", "Yakıt", "Bakım", "Otopark"] },
-      "Yaşam & Eğlence": { color: "#84cc16", icon: "🎉", subs: ["Eğlence", "Tatil", "Abonelikler"] },
-      "Yatırımlar": { color: "#ec4899", icon: "📈", subs: ["Yatırımlar", "Hisse", "Altın/Döviz"] },
-      "Gelir": { color: "#eab308", icon: "💰", subs: ["Maaş", "Ek Gelir", "Hediye"] },
-      "Diğer": { color: "#6b7280", icon: "📦", subs: ["Diğer"] }
+      "Yiyecek & İçecek": { color: "#EA4335", icon: "🍴", subs: ["Yiyecek & İçecek", "Bar, kafe", "Market alışverişi", "Restoran, fast-food"] },
+      "Alışveriş": { color: "#0084FF", icon: "🛍️", subs: ["Alışveriş", "Boş zaman", "Eczane, kozmetik", "Elektronik, aksesuar", "Ev, bahçe", "Hediyeler", "Kıyafet & ayakkabı"] },
+      "Konut": { color: "#FB8C00", icon: "🏠", subs: ["Konut", "Bakım, onarım", "Kira", "Faturalar"] },
+      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Ulaşım", "Taksi", "Toplu taşıma", "Uzak mesafe"] },
+      "Araç": { color: "#AB47BC", icon: "🚗", subs: ["Araç", "Yakıt", "Bakım", "Otopark"] },
+      "Yaşam & Eğlence": { color: "#7CB342", icon: "🎉", subs: ["Eğlence", "Tatil", "Abonelikler"] },
+      "Finansal giderler": { color: "#26A69A", icon: "💳", subs: ["Banka ücretleri", "Vergiler", "Kredi faizi"] },
+      "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Yatırımlar", "Hisse", "Altın/Döviz"] },
+      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş, faturalar", "Hediyeler", "Ek Gelir"] },
+      "Diğer": { color: "#9E9E9E", icon: "📦", subs: ["Diğer"] }
     };
 
+    let accounts = [];
+    let transactions = [];
     let selectedAccountId = null;
-    let currentModalType = 'expense';
-    let localAccounts = [];
+    let currentType = 'expense';
+    let donutChartInstance = null;
+    let trendChartInstance = null;
 
-    function notify(text, isError = false) {
-      const box = document.getElementById('alert-box');
-      box.innerText = text;
-      box.className = isError 
-        ? "mx-4 mt-3 p-3 rounded-xl text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30"
-        : "mx-4 mt-3 p-3 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-      box.classList.remove('hidden');
-      setTimeout(() => box.classList.add('hidden'), 5000);
+    async function init() {
+      await loadData();
+      initCategories();
     }
 
     async function loadData() {
-      const badge = document.getElementById('status-badge');
-      try {
-        const { data: accounts, error: aErr } = await supabaseClient.from('accounts').select('*').order('created_at');
-        if (aErr) throw aErr;
-        localAccounts = accounts || [];
+      const { data: accs, error: accErr } = await supabase.from('accounts').select('*').order('created_at');
+      const { data: txs, error: txErr } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
 
-        const { data: txs, error: tErr } = await supabaseClient.from('transactions').select('*').order('created_at', { ascending: false });
-        if (tErr) throw tErr;
-
-        badge.innerHTML = "● Canlı Bağlı";
-        badge.className = "text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium";
-
-        renderAccounts(localAccounts);
-        renderTransactions(txs || []);
-      } catch (err) {
-        badge.innerHTML = "✖ Hata!";
-        badge.className = "text-xs px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium";
-        notify("Veri Hatası: " + err.message, true);
-      }
-    }
-
-    function renderAccounts(accounts) {
-      const grid = document.getElementById('accounts-grid');
-      grid.innerHTML = '';
-      if (accounts.length === 0) {
-        grid.innerHTML = '<div class="col-span-2 text-xs text-slate-500 py-3 text-center">Hesap yok.</div>';
+      if (accErr) {
+        document.getElementById('sync-badge').innerText = "Hata!";
+        document.getElementById('sync-badge').className = "text-[11px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200";
         return;
       }
-      accounts.forEach(acc => {
-        const isSel = selectedAccountId === acc.id;
-        const el = document.createElement('div');
-        el.className = `p-3 rounded-2xl cursor-pointer border ${isSel ? 'border-sky-400 bg-[#232530]' : 'border-[#282932] bg-[#1c1d24]'}`;
-        el.onclick = () => { selectedAccountId = (selectedAccountId === acc.id ? null : acc.id); loadData(); };
-        el.innerHTML = `
-          <div class="text-[11px] text-slate-400 font-medium">${acc.name}</div>
-          <div class="text-sm font-bold text-white mt-0.5">
-            ${acc.balance < 0 ? '-' : ''}₺${Math.abs(acc.balance || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+
+      accounts = accs || [];
+      transactions = txs || [];
+      renderAccounts();
+      renderDashboard();
+    }
+
+    function renderAccounts() {
+      const c = document.getElementById('accounts-container');
+      c.innerHTML = '';
+
+      accounts.forEach(a => {
+        const isSel = selectedAccountId === a.id;
+        const val = parseFloat(a.balance);
+        const card = document.createElement('div');
+        card.onclick = () => { selectedAccountId = selectedAccountId === a.id ? null : a.id; renderAccounts(); renderDashboard(); };
+        card.style.backgroundColor = a.color || '#0084FF';
+        card.className = `shrink-0 w-[180px] h-[62px] rounded-lg p-2.5 text-white flex flex-col justify-between shadow-xs cursor-pointer transition transform ${isSel ? 'ring-3 ring-slate-800 scale-102' : 'hover:opacity-95'}`;
+        card.innerHTML = `
+          <div class="flex items-center space-x-1.5 text-xs font-semibold">
+            <span>💳</span>
+            <span>${a.name}</span>
+          </div>
+          <div class="text-sm font-bold tracking-tight">
+            ${val < 0 ? '-' : ''}₺${Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </div>
         `;
-        grid.appendChild(el);
+        c.appendChild(card);
       });
 
-      const modalAcc = document.getElementById('modal-account');
-      modalAcc.innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+      const selAcc = document.getElementById('select-account');
+      selAcc.innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     }
 
-    function renderTransactions(txs) {
-      const filtered = selectedAccountId ? txs.filter(t => t.account_id === selectedAccountId) : txs;
+    function renderDashboard() {
+      const filtered = selectedAccountId ? transactions.filter(t => t.account_id === selectedAccountId) : transactions;
 
-      let exp = 0, inc = 0;
+      let netBal = 0;
+      let exp = 0;
+      let inc = 0;
+      const catTotals = {};
+
+      if (selectedAccountId) {
+        const a = accounts.find(x => x.id === selectedAccountId);
+        netBal = a ? parseFloat(a.balance) : 0;
+      } else {
+        netBal = accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0);
+      }
+
       filtered.forEach(t => {
-        const v = parseFloat(t.amount) || 0;
-        if (t.type === 'expense') exp += v; else inc += v;
+        const v = parseFloat(t.amount);
+        if (t.type === 'expense') {
+          exp += v;
+          catTotals[t.category] = (catTotals[t.category] || 0) + v;
+        } else {
+          inc += v;
+        }
       });
 
-      const net = inc - exp;
-      const netEl = document.getElementById('cashflow-net');
-      netEl.innerText = (net < 0 ? '-' : '+') + '₺' + Math.abs(net).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-      netEl.className = net < 0 ? 'text-rose-400 font-bold text-sm' : 'text-emerald-400 font-bold text-sm';
+      document.getElementById('gauge-bal').innerText = (netBal < 0 ? '-' : '') + '₺' + Math.abs(netBal).toLocaleString('tr-TR');
+      document.getElementById('gauge-flow').innerText = '₺' + (inc - exp).toLocaleString('tr-TR');
+      document.getElementById('gauge-exp').innerText = '₺' + exp.toLocaleString('tr-TR');
 
-      document.getElementById('income-total').innerText = '₺' + inc.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-      document.getElementById('expense-total').innerText = '₺' + exp.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      document.getElementById('trend-total').innerText = (netBal < 0 ? '-' : '') + '₺' + Math.abs(netBal).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      renderTrendChart();
+      renderDonut(catTotals, exp);
+      renderTable(filtered);
+    }
 
-      const tot = inc + exp;
-      document.getElementById('income-bar').style.width = (tot > 0 ? (inc/tot)*100 : 50) + '%';
-      document.getElementById('expense-bar').style.width = (tot > 0 ? (exp/tot)*100 : 50) + '%';
+    function renderDonut(catTotals, exp) {
+      const empty = document.getElementById('expense-empty');
+      const box = document.getElementById('expense-chart-box');
+      const leg = document.getElementById('expense-legend');
 
-      const list = document.getElementById('tx-list');
-      list.innerHTML = '';
-      if (filtered.length === 0) {
-        list.innerHTML = '<div class="text-center text-slate-500 py-6 text-xs">Henüz işlem yok.</div>';
+      const labels = Object.keys(catTotals);
+      const data = Object.values(catTotals);
+
+      if (data.length === 0 || exp === 0) {
+        empty.classList.remove('hidden');
+        box.classList.add('hidden');
+        leg.innerHTML = '';
         return;
       }
 
-      filtered.slice(0, 15).forEach(t => {
-        const isExp = t.type === 'expense';
-        const cat = CATEGORIES[t.category] || { icon: '📦', color: '#64748b' };
+      empty.classList.add('hidden');
+      box.classList.remove('hidden');
+
+      const colors = labels.map(l => CATEGORIES[l]?.color || '#9E9E9E');
+
+      if (donutChartInstance) donutChartInstance.destroy();
+      const ctx = document.getElementById('donutChart').getContext('2d');
+      donutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: { cutout: '68%', responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      leg.innerHTML = labels.map((l, i) => `
+        <span class="inline-flex items-center gap-1 font-medium">
+          <span class="w-2 h-2 rounded-full" style="background-color: ${colors[i]}"></span>
+          ${l}
+        </span>
+      `).join('');
+    }
+
+    function renderTrendChart() {
+      if (trendChartInstance) trendChartInstance.destroy();
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['1 Nis', '5 Nis', '10 Nis', '15 Nis', '20 Nis', '25 Nis', '30 Nis'],
+          datasets: [{
+            data: [0, 0, 0, 0, 0, 0, 0],
+            borderColor: '#0084FF',
+            backgroundColor: 'rgba(0,132,255,0.06)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94A3B8' } },
+            y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 9 }, color: '#94A3B8' } }
+          }
+        }
+      });
+    }
+
+    function renderTable(txs) {
+      const t = document.getElementById('tx-table');
+      t.innerHTML = '';
+      if (txs.length === 0) {
+        t.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">Henüz kayıt yok.</div>';
+        return;
+      }
+      txs.slice(0, 10).forEach(x => {
+        const isExp = x.type === 'expense';
+        const cat = CATEGORIES[x.category] || { icon: '📦', color: '#9E9E9E' };
         const row = document.createElement('div');
-        row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-[#15161b] border border-[#24252f]';
+        row.className = 'py-3 flex items-center justify-between';
         row.innerHTML = `
-          <div class="flex items-center gap-2.5">
-            <span class="text-lg">${cat.icon}</span>
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm" style="background-color: ${cat.color}15; color: ${cat.color};">
+              ${cat.icon}
+            </div>
             <div>
-              <div class="text-xs font-semibold text-white">${t.sub_category || t.category}</div>
-              <div class="text-[10px] text-slate-400">${t.note || t.category}</div>
+              <div class="text-xs font-semibold text-slate-800">${x.sub_category || x.category}</div>
+              <div class="text-[11px] text-slate-400">${x.note || x.category}</div>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-xs font-bold ${isExp ? 'text-rose-400' : 'text-emerald-400'}">
-              ${isExp ? '-' : '+'}₺${parseFloat(t.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+            <div class="text-xs font-bold ${isExp ? 'text-rose-500' : 'text-emerald-500'}">
+              ${isExp ? '-' : '+'}₺${parseFloat(x.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
             </div>
-            <button onclick="deleteTx('${t.id}')" class="text-[10px] text-slate-500 hover:text-rose-400">Sil</button>
+            <button onclick="deleteRecord('${x.id}')" class="text-[10px] text-slate-400 hover:text-rose-500">Sil</button>
           </div>
         `;
-        list.appendChild(row);
+        t.appendChild(row);
       });
     }
 
     function openModal() {
-      document.getElementById('tx-modal').classList.remove('hidden');
-      const catSelect = document.getElementById('modal-category');
-      catSelect.innerHTML = Object.keys(CATEGORIES).map(c => `<option value="${c}">${CATEGORIES[c].icon} ${c}</option>`).join('');
-      updateSubCategories();
+      document.getElementById('modal').classList.remove('hidden');
     }
-
     function closeModal() {
-      document.getElementById('tx-modal').classList.add('hidden');
+      document.getElementById('modal').classList.add('hidden');
     }
 
-    function setModalType(type) {
-      currentModalType = type;
-      const exp = document.getElementById('modal-exp-btn');
-      const inc = document.getElementById('modal-inc-btn');
-      if (type === 'expense') {
-        exp.className = 'py-2 rounded-lg font-semibold text-xs bg-rose-500 text-white';
-        inc.className = 'py-2 rounded-lg font-semibold text-xs text-slate-400';
+    function setType(t) {
+      currentType = t;
+      const bExp = document.getElementById('btn-exp');
+      const bInc = document.getElementById('btn-inc');
+      if (t === 'expense') {
+        bExp.className = 'py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs';
+        bInc.className = 'py-2 text-xs font-bold rounded-md text-slate-600';
       } else {
-        inc.className = 'py-2 rounded-lg font-semibold text-xs bg-emerald-500 text-white';
-        exp.className = 'py-2 rounded-lg font-semibold text-xs text-slate-400';
+        bInc.className = 'py-2 text-xs font-bold rounded-md bg-emerald-500 text-white shadow-xs';
+        bExp.className = 'py-2 text-xs font-bold rounded-md text-slate-600';
       }
     }
 
-    function updateSubCategories() {
-      const cat = document.getElementById('modal-category').value;
-      const subSelect = document.getElementById('modal-subcategory');
-      const subs = CATEGORIES[cat]?.subs || [cat];
-      subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+    function initCategories() {
+      const s = document.getElementById('select-category');
+      s.innerHTML = Object.keys(CATEGORIES).map(c => `<option value="${c}">${CATEGORIES[c].icon} ${c}</option>`).join('');
+      updateSubs();
     }
 
-    async function submitTransaction() {
-      const amtInput = document.getElementById('modal-amount');
-      const amt = parseFloat(amtInput.value);
-      if (!amt || amt <= 0) {
-        alert('Lütfen geçerli bir tutar yazın!');
-        return;
-      }
+    function updateSubs() {
+      const c = document.getElementById('select-category').value;
+      const sub = document.getElementById('select-sub');
+      const list = CATEGORIES[c]?.subs || [c];
+      sub.innerHTML = list.map(x => `<option value="${x}">${x}</option>`).join('');
+    }
 
-      const accountId = document.getElementById('modal-account').value;
-      if (!accountId) {
-        alert('Hesap bulunamadı! Önce Supabase SQL alanında hesap oluşturulmalı.');
-        return;
-      }
+    async function saveRecord() {
+      const amt = parseFloat(document.getElementById('input-amount').value);
+      if (!amt || amt <= 0) return alert('Tutar girin');
 
-      const category = document.getElementById('modal-category').value;
-      const subCategory = document.getElementById('modal-subcategory').value;
-      const note = document.getElementById('modal-note').value;
+      const accId = document.getElementById('select-account').value;
+      const cat = document.getElementById('select-category').value;
+      const sub = document.getElementById('select-sub').value;
+      const note = document.getElementById('input-note').value;
 
-      const btn = document.getElementById('modal-save-btn');
+      const btn = document.getElementById('save-btn');
       btn.innerText = 'Kaydediliyor...';
       btn.disabled = true;
 
-      try {
-        const { error: insErr } = await supabaseClient.from('transactions').insert([{
-          account_id: accountId,
-          type: currentModalType,
-          amount: amt,
-          category: category,
-          sub_category: subCategory,
-          note: note
-        }]);
-        if (insErr) throw insErr;
+      await supabase.from('transactions').insert([{
+        account_id: accId,
+        type: currentType,
+        amount: amt,
+        category: cat,
+        sub_category: sub,
+        note: note
+      }]);
 
-        // Bakiye güncelleme
-        const acc = localAccounts.find(a => a.id === accountId);
-        if (acc) {
-          const newBal = currentModalType === 'expense' ? (parseFloat(acc.balance) - amt) : (parseFloat(acc.balance) + amt);
-          await supabaseClient.from('accounts').update({ balance: newBal }).eq('id', accountId);
-        }
+      const a = accounts.find(x => x.id === accId);
+      if (a) {
+        const cur = parseFloat(a.balance);
+        const next = currentType === 'expense' ? (cur - amt) : (cur + amt);
+        await supabase.from('accounts').update({ balance: next }).eq('id', accId);
+      }
 
-        notify('İşlem başarıyla eklendi!');
-        amtInput.value = '';
-        document.getElementById('modal-note').value = '';
-        closeModal();
+      btn.innerText = 'Kaydet';
+      btn.disabled = false;
+      document.getElementById('input-amount').value = '';
+      document.getElementById('input-note').value = '';
+      closeModal();
+      loadData();
+    }
+
+    async function deleteRecord(id) {
+      if (confirm('Kayıt silinsin mi?')) {
+        await supabase.from('transactions').delete().eq('id', id);
         loadData();
-      } catch (err) {
-        alert('HATA: ' + err.message);
-      } finally {
-        btn.innerText = 'Kaydet';
-        btn.disabled = false;
       }
     }
 
-    async function deleteTx(id) {
-      if (confirm('İşlemi silmek istiyor musunuz?')) {
-        await supabaseClient.from('transactions').delete().eq('id', id);
-        notify('Kayıt silindi.');
-        loadData();
-      }
+    async function addAccountPrompt() {
+      const name = prompt('Yeni hesap adı (Örn: Garanti):');
+      if (!name) return;
+      const bal = parseFloat(prompt('Başlangıç bakiyesi (Örn: 1000):') || '0');
+      await supabase.from('accounts').insert([{ name: name, balance: bal, color: '#3B82F6' }]);
+      loadData();
     }
 
     // Realtime Dinleme
-    try {
-      supabaseClient.channel('realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => loadData())
-        .subscribe();
-    } catch(e){}
+    supabase.channel('wallet-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => loadData())
+      .subscribe();
 
-    loadData();
+    init();
   </script>
 </body>
 </html>
