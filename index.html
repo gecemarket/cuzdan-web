@@ -11,15 +11,19 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #F4F6F9; }
-    .menu-active { background-color: #D1E7DD !important; color: #0F5132 !important; font-weight: 600 !important; }
-    .nav-btn-active { background-color: #E2E8F0 !important; color: #0F172A !important; font-weight: 700 !important; }
-    .gauge-needle { transform-origin: 50px 50px; transition: transform 0.5s ease-out; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #EDF1F7; }
+    .gauge-bg { stroke: #E2E8F0; }
+    .tab-btn-active { background-color: #F1F5F9 !important; color: #0F172A !important; font-weight: 700 !important; border: 1px solid #CBD5E1 !important; }
+    .mobile-menu-active { background-color: #D1E7DD !important; color: #0F5132 !important; font-weight: 700 !important; }
   </style>
 
   <script>
-    // --- GÜVENLİ VE KESİNTİSİZ SEKME GEÇİŞ MOTORU ---
-    window.switchTab = function(tab) {
+    // --- KESİNTİSİZ SEKME YÖNETİCİSİ (HEM MASAÜSTÜ HEM MOBİL) ---
+    window.activeTab = 'dashboard';
+    window.viewingAccountId = null;
+
+    window.switchTab = function(tabName) {
+      window.activeTab = tabName;
       if (typeof toggleDrawer === 'function') toggleDrawer(false);
       if (typeof toggleDateModal === 'function') toggleDateModal(false);
 
@@ -29,18 +33,37 @@
         if (el) el.style.display = 'none';
       });
 
-      document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('menu-active'));
-
-      const target = document.getElementById('view-' + tab);
+      const target = document.getElementById('view-' + tabName);
       if (target) target.style.display = 'block';
 
-      const drawerBtn = document.getElementById('m-item-' + tab);
-      if (drawerBtn) drawerBtn.classList.add('menu-active');
+      // Masaüstü Butonları
+      ['dashboard', 'accounts', 'records', 'analytics'].forEach(v => {
+        const dBtn = document.getElementById('d-tab-' + v);
+        if (dBtn) {
+          if (v === tabName || (v === 'accounts' && tabName === 'detail')) {
+            dBtn.classList.add('tab-btn-active');
+          } else {
+            dBtn.classList.remove('tab-btn-active');
+          }
+        }
+      });
 
-      if (tab === 'accounts' && typeof renderAccountsPage === 'function') renderAccountsPage();
-      if (tab === 'records' && typeof renderRecordsPage === 'function') renderRecordsPage();
-      if (tab === 'analytics' && typeof renderAnalyticsReport === 'function') renderAnalyticsReport();
-      if (tab === 'dashboard' && typeof renderDashboardData === 'function') renderDashboardData();
+      // Mobil Menü Butonları
+      ['dashboard', 'accounts', 'records', 'analytics'].forEach(v => {
+        const mBtn = document.getElementById('m-tab-' + v);
+        if (mBtn) {
+          if (v === tabName || (v === 'accounts' && tabName === 'detail')) {
+            mBtn.classList.add('mobile-menu-active');
+          } else {
+            mBtn.classList.remove('mobile-menu-active');
+          }
+        }
+      });
+
+      if (tabName === 'accounts') renderAccountsPage();
+      if (tabName === 'analytics') renderAnalyticsReport();
+      if (tabName === 'records') renderRecordsPage();
+      if (tabName === 'dashboard') renderDashboardData();
     };
 
     window.toggleDrawer = function(open) {
@@ -60,25 +83,48 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-16 select-none">
 
-  <!-- ================= 1. ÜST BAR (NAVBAR) ================= -->
-  <header class="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 shadow-xs">
-    <!-- Cüzdan Logosu -->
-    <div onclick="switchTab('dashboard')" class="w-10 h-10 rounded-xl border border-emerald-500 bg-white flex items-center justify-center cursor-pointer shadow-xs">
-      <svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-      </svg>
+  <!-- ================= 1. ÜST NAVİGASYON (RESPONSIVE NAVBAR) ================= -->
+  <header class="bg-white border-b border-slate-200 px-4 md:px-8 py-2.5 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+    <div class="flex items-center space-x-3 md:space-x-6">
+      <!-- Cüzdan Logosu -->
+      <div onclick="switchTab('dashboard')" class="flex items-center space-x-2 cursor-pointer">
+        <div class="w-9 h-9 rounded-xl border border-emerald-500 bg-white flex items-center justify-center shadow-xs">
+          <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        </div>
+        <span class="font-bold text-slate-800 text-sm hidden md:inline">Wallet</span>
+      </div>
+
+      <!-- Masaüstü Navigasyon Butonları (Mobilde Gizli) -->
+      <nav class="hidden md:flex items-center space-x-1.5 text-[13px] font-medium text-slate-600">
+        <button id="d-tab-dashboard" onclick="switchTab('dashboard')" class="px-3.5 py-1.5 rounded-full tab-btn-active transition cursor-pointer">Kontrol Paneli</button>
+        <button id="d-tab-accounts" onclick="switchTab('accounts')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Hesaplar</button>
+        <button id="d-tab-records" onclick="switchTab('records')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Kayıtlar</button>
+        <button id="d-tab-analytics" onclick="switchTab('analytics')" class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer">Analitik</button>
+        <button class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition opacity-60">Yatırımlar</button>
+        <button class="px-3.5 py-1.5 rounded-full hover:bg-slate-100 transition opacity-60">İçe Aktarılanlar</button>
+      </nav>
     </div>
 
-    <!-- Sağ Taraf: Canlı Durum, + Kayıt & Menü Butonu -->
-    <div class="flex items-center space-x-2">
-      <span id="sync-badge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 hidden sm:inline">
+    <!-- Sağ Taraf: Canlı Durum, + Kayıt, Profil / Mobil Menü Butonu -->
+    <div class="flex items-center space-x-2 md:space-x-3">
+      <span id="sync-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
         ● Canlı
       </span>
-      <button type="button" onclick="openRecordModal()" class="bg-[#00A86B] hover:bg-[#00925d] active:scale-95 text-white font-semibold text-xs px-3.5 py-1.5 rounded-full shadow-xs transition flex items-center space-x-1 cursor-pointer">
+      <button onclick="openRecordModal()" class="bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-medium text-xs md:text-[13px] px-3.5 md:px-4 py-1.5 rounded-md shadow-xs transition flex items-center space-x-1 cursor-pointer">
         <span class="text-base font-bold leading-none">+</span>
         <span>Kayıt</span>
       </button>
-      <button type="button" onclick="toggleDrawer(true)" class="p-1.5 text-slate-700 hover:text-black cursor-pointer">
+
+      <!-- Masaüstü Profil -->
+      <div class="hidden md:flex items-center space-x-1.5 text-xs text-slate-600 border-l border-slate-200 pl-3">
+        <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-[11px]">M</span>
+        <span>Mustafav2 ▾</span>
+      </div>
+
+      <!-- Mobil Hamburger Menü (Masaüstünde Gizli) -->
+      <button onclick="toggleDrawer(true)" class="md:hidden p-1 text-slate-700 hover:text-black cursor-pointer">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
@@ -86,8 +132,8 @@
     </div>
   </header>
 
-  <!-- ================= 2. TAM EKRAN ÇEKMECE MENÜ (DRAWER) ================= -->
-  <div id="mobile-drawer" class="fixed inset-0 bg-white z-50 hidden flex flex-col p-5 space-y-4 overflow-y-auto">
+  <!-- ================= 2. MOBİL AÇILIR MENÜ (DRAWER) ================= -->
+  <div id="mobile-drawer" class="fixed inset-0 bg-white z-50 hidden flex flex-col p-5 space-y-4 overflow-y-auto md:hidden">
     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
       <div class="w-10 h-10 rounded-xl border border-emerald-500 bg-white flex items-center justify-center">
         <svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -95,207 +141,211 @@
         </svg>
       </div>
       <div class="flex items-center space-x-2">
-        <button type="button" onclick="openRecordModal(); toggleDrawer(false);" class="bg-[#00A86B] text-white text-xs px-3.5 py-1.5 rounded-full font-semibold">
-          + Kayıt
-        </button>
-        <button type="button" onclick="toggleDrawer(false)" class="p-1 text-slate-600 text-2xl font-bold cursor-pointer">
-          &times;
-        </button>
+        <button onclick="openRecordModal(); toggleDrawer(false);" class="bg-[#2EB85C] text-white text-xs px-3.5 py-1.5 rounded-full font-semibold">+ Kayıt</button>
+        <button onclick="toggleDrawer(false)" class="p-1 text-slate-600 text-2xl font-bold cursor-pointer">&times;</button>
       </div>
     </div>
-
-    <!-- Menü Butonları -->
     <div class="flex flex-col space-y-1 text-sm font-medium text-slate-700">
-      <button id="m-item-dashboard" onclick="switchTab('dashboard')" class="menu-item menu-active text-left px-3 py-2.5 rounded-lg transition cursor-pointer">Kontrol Paneli</button>
-      <button id="m-item-accounts" onclick="switchTab('accounts')" class="menu-item text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Hesaplar</button>
-      <button id="m-item-records" onclick="switchTab('records')" class="menu-item text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Kayıtlar</button>
-      <button id="m-item-analytics" onclick="switchTab('analytics')" class="menu-item text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Analitik</button>
-      <button class="menu-item text-left px-3 py-2.5 rounded-lg opacity-60">Yatırımlar</button>
-      <button class="menu-item text-left px-3 py-2.5 rounded-lg opacity-60">İçe Aktarımlar</button>
-      <button class="menu-item text-left px-3 py-2.5 rounded-lg opacity-60">Ayarlar</button>
-      <button class="menu-item text-left px-3 py-2.5 rounded-lg opacity-60">Yardım</button>
-    </div>
-
-    <div class="pt-6 border-t border-slate-100 space-y-3">
-      <p class="text-xs text-slate-400">Daha fazla özellikle mobil uygulamamızı deneyin:</p>
-      <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs font-semibold text-slate-700">
-        <span class="flex items-center gap-2">🍎 App Store</span>
-        <span>&rsaquo;</span>
-      </div>
-      <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs font-semibold text-slate-700">
-        <span class="flex items-center gap-2">▶️ Google Play</span>
-        <span>&rsaquo;</span>
-      </div>
+      <button id="m-tab-dashboard" onclick="switchTab('dashboard')" class="mobile-menu-active text-left px-3 py-2.5 rounded-lg transition cursor-pointer">Kontrol Paneli</button>
+      <button id="m-tab-accounts" onclick="switchTab('accounts')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Hesaplar</button>
+      <button id="m-tab-records" onclick="switchTab('records')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Kayıtlar</button>
+      <button id="m-tab-analytics" onclick="switchTab('analytics')" class="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">Analitik</button>
+      <button class="text-left px-3 py-2.5 rounded-lg opacity-60">Yatırımlar</button>
+      <button class="text-left px-3 py-2.5 rounded-lg opacity-60">İçe Aktarılanlar</button>
+      <button class="text-left px-3 py-2.5 rounded-lg opacity-60">Ayarlar</button>
+      <button class="text-left px-3 py-2.5 rounded-lg opacity-60">Yardım</button>
     </div>
   </div>
 
-  <!-- ================= 3. TARİH SEÇİCİ AÇILIR MODAL ================= -->
+  <!-- ================= 3. TARİH SEÇİCİ MODALI ================= -->
   <div id="date-picker-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-200 p-4 space-y-4">
       <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs font-semibold text-slate-600">
-        <button class="py-1.5 rounded-lg">Özel</button>
+        <button class="py-1.5 rounded-lg">Özel aralık</button>
         <button class="py-1.5 rounded-lg">Haftalar</button>
-        <button class="py-1.5 rounded-lg bg-[#00A86B] text-white shadow-xs">Aylar</button>
+        <button class="py-1.5 rounded-lg bg-[#2EB85C] text-white shadow-xs">Aylar</button>
         <button class="py-1.5 rounded-lg">Yıllar</button>
       </div>
-
       <div class="flex items-center justify-between px-2 text-sm font-bold text-slate-800">
         <button class="text-slate-400 hover:text-slate-700">&lt;</button>
-        <span id="date-picker-year">2026</span>
+        <span>2026</span>
         <button class="text-slate-400 hover:text-slate-700">&gt;</button>
       </div>
-
       <div class="grid grid-cols-3 gap-2 text-xs font-medium text-slate-700 text-center">
-        <button onclick="selectMonth(0, 'Oca')" class="p-2.5 rounded-xl hover:bg-slate-100">Oca</button>
-        <button onclick="selectMonth(1, 'Şub')" class="p-2.5 rounded-xl hover:bg-slate-100">Şub</button>
-        <button onclick="selectMonth(2, 'Mar')" class="p-2.5 rounded-xl hover:bg-slate-100">Mar</button>
-        <button onclick="selectMonth(3, 'Nis')" class="p-2.5 rounded-xl hover:bg-slate-100">Nis</button>
-        <button onclick="selectMonth(4, 'May')" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
-        <button onclick="selectMonth(5, 'Haz')" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
-        <button onclick="selectMonth(6, 'Tem')" class="p-2.5 rounded-xl hover:bg-slate-100">Tem</button>
-        <button onclick="selectMonth(7, 'Ağu')" class="p-2.5 rounded-xl hover:bg-slate-100">Ağu</button>
-        <button onclick="selectMonth(8, 'Eyl')" class="p-2.5 rounded-xl bg-[#00A86B] text-white font-bold shadow-xs">Eyl</button>
-        <button onclick="selectMonth(9, 'Eki')" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
-        <button onclick="selectMonth(10, 'Kas')" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
-        <button onclick="selectMonth(11, 'Ara')" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
+        <button onclick="pickMonth('Ocak')" class="p-2.5 rounded-xl hover:bg-slate-100">Oca</button>
+        <button onclick="pickMonth('Şubat')" class="p-2.5 rounded-xl hover:bg-slate-100">Şub</button>
+        <button onclick="pickMonth('Mart')" class="p-2.5 rounded-xl hover:bg-slate-100">Mar</button>
+        <button onclick="pickMonth('Nisan')" class="p-2.5 rounded-xl hover:bg-slate-100">Nis</button>
+        <button onclick="pickMonth('Mayıs')" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
+        <button onclick="pickMonth('Haziran')" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
+        <button onclick="pickMonth('Temmuz')" class="p-2.5 rounded-xl hover:bg-slate-100">Tem</button>
+        <button onclick="pickMonth('Ağustos')" class="p-2.5 rounded-xl hover:bg-slate-100">Ağu</button>
+        <button onclick="pickMonth('Eylül')" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Eyl</button>
+        <button onclick="pickMonth('Ekim')" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
+        <button onclick="pickMonth('Kasım')" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
+        <button onclick="pickMonth('Aralık')" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
       </div>
-
       <button onclick="toggleDateModal(false)" class="w-full py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold">Kapat</button>
     </div>
   </div>
 
-  <!-- ================= GÖRÜNÜM 1: KONTROL PANELİ ================= -->
-  <main id="view-dashboard" class="max-w-md mx-auto p-3.5 space-y-3.5">
+  <!-- ================= GÖRÜNÜM 1: KONTROL PANELİ (DASHBOARD) ================= -->
+  <main id="view-dashboard" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4">
     
-    <!-- 2x2 Hesap Kartları -->
-    <div class="grid grid-cols-2 gap-2.5" id="mobile-accounts-grid"></div>
-
-    <!-- Tarih Çubuğu -->
-    <div class="flex items-center justify-between gap-2 pt-0.5">
-      <div onclick="toggleDateModal(true)" class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs font-semibold text-slate-700 shadow-2xs flex-1 cursor-pointer">
-        <span class="text-slate-400">&lt;</span>
-        <span class="flex items-center gap-1.5" id="current-month-label">Bu ay <span class="text-[10px] text-slate-400">⇅</span></span>
-        <span class="text-slate-400">&gt;</span>
-      </div>
-      <button type="button" onclick="openRecordModal()" class="w-8 h-8 rounded-lg bg-[#00A86B] text-white flex items-center justify-center font-bold text-lg shadow-2xs cursor-pointer">
-        +
+    <!-- HESAP KARTLARI (Masaüstünde Yatay Bar / Mobilde 2x2 Grid) -->
+    <!-- Masaüstü Bar -->
+    <div class="hidden md:flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none">
+      <div id="desktop-accounts-container" class="flex items-center space-x-3 shrink-0"></div>
+      <button onclick="promptNewAccount()" class="shrink-0 h-[62px] px-5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-xs font-semibold flex items-center space-x-1 transition bg-white/50 cursor-pointer">
+        <span class="text-base font-bold">+</span>
+        <span>Hesap Ekle</span>
       </button>
     </div>
 
-    <!-- Kontrol Paneli Göstergeleri -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4">
-      <div class="flex justify-between items-center mb-1">
-        <h2 class="text-xs font-bold text-slate-800 tracking-tight">Kontrol Paneli</h2>
-        <div class="text-slate-300 text-xs flex space-x-2"><span>⊞</span><span>🗑</span></div>
-      </div>
+    <!-- Mobil 2x2 Grid -->
+    <div class="grid grid-cols-2 gap-2.5 md:hidden" id="mobile-accounts-grid"></div>
 
-      <div class="grid grid-cols-3 gap-1 text-center py-2">
-        <div class="flex flex-col items-center">
-          <svg class="w-20 h-14" viewBox="0 0 100 60">
-            <path d="M10,50 A40,40 0 0,1 35,16" fill="none" stroke="#EA4335" stroke-width="7" stroke-linecap="round"/>
-            <path d="M40,13 A40,40 0 0,1 65,16" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/>
-            <path d="M70,20 A40,40 0 0,1 90,50" fill="none" stroke="#2EB85C" stroke-width="7" stroke-linecap="round"/>
-            <line x1="50" y1="50" x2="25" y2="25" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="50" cy="50" r="4" fill="#334155"/>
-          </svg>
-          <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">BAKİYE</span>
-          <span id="gauge-bal" class="text-xs font-bold text-slate-800 mt-0.5">₺0</span>
-        </div>
-
-        <div class="flex flex-col items-center">
-          <svg class="w-20 h-14" viewBox="0 0 100 60">
-            <path d="M10,50 A40,40 0 0,1 35,16" fill="none" stroke="#EA4335" stroke-width="7" stroke-linecap="round"/>
-            <path d="M40,13 A40,40 0 0,1 65,16" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/>
-            <path d="M70,20 A40,40 0 0,1 90,50" fill="none" stroke="#2EB85C" stroke-width="7" stroke-linecap="round"/>
-            <line x1="50" y1="50" x2="35" y2="30" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="50" cy="50" r="4" fill="#334155"/>
-          </svg>
-          <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">NAKİT AKIŞI</span>
-          <span id="gauge-flow" class="text-xs font-bold text-slate-800 mt-0.5">₺0</span>
-        </div>
-
-        <div class="flex flex-col items-center">
-          <svg class="w-20 h-14" viewBox="0 0 100 60">
-            <path d="M10,50 A40,40 0 0,1 35,16" fill="none" stroke="#EA4335" stroke-width="7" stroke-linecap="round"/>
-            <path d="M40,13 A40,40 0 0,1 65,16" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/>
-            <path d="M70,20 A40,40 0 0,1 90,50" fill="none" stroke="#2EB85C" stroke-width="7" stroke-linecap="round"/>
-            <line x1="50" y1="50" x2="15" y2="48" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="50" cy="50" r="4" fill="#334155"/>
-          </svg>
-          <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">HARCAMA</span>
-          <span id="gauge-exp" class="text-xs font-bold text-slate-800 mt-0.5">₺0</span>
-        </div>
+    <!-- Tarih Seçici -->
+    <div class="flex justify-center items-center py-1">
+      <div onclick="toggleDateModal(true)" class="bg-white border border-slate-200 shadow-2xs rounded-full px-4 py-1.5 flex items-center space-x-4 text-xs font-semibold text-slate-700 cursor-pointer">
+        <span class="text-slate-400">&lt;</span>
+        <span id="current-month-display">Bu ay ⌄</span>
+        <span class="text-slate-400">&gt;</span>
       </div>
     </div>
 
-    <!-- Bakiye Eğilimi -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4">
-      <div class="flex justify-between items-center mb-1">
-        <h2 class="text-xs font-bold text-slate-800 tracking-tight">Bakiye Eğilimi</h2>
-        <div class="text-slate-300 text-xs flex space-x-2"><span>⊞</span><span>🗑</span></div>
-      </div>
-      <div class="flex justify-between items-baseline mb-2">
-        <div>
-          <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
-          <span id="trend-total" class="text-base font-bold text-slate-800 tracking-tight">₺0,00</span>
+    <!-- WIDGETLAR (Masaüstünde 3'lü Grid / Mobilde Dikey Kolon) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <!-- WIDGET 1: GÖSTERGELER (İBRELER) -->
+      <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xs font-bold text-slate-600 tracking-wider">Kontrol Paneli</h2>
+          <div class="text-slate-400 text-xs flex space-x-2"><span>🎛</span><span>🗑</span></div>
         </div>
-        <span class="text-[11px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">↓ -101%</span>
-      </div>
-      <div class="h-36 w-full">
-        <canvas id="trendChart"></canvas>
-      </div>
-    </div>
 
-    <!-- Gider Yapısı -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4">
-      <div class="flex justify-between items-center mb-1">
-        <h2 class="text-xs font-bold text-slate-800 tracking-tight">Gider Yapısı</h2>
-        <div class="text-slate-300 text-xs flex space-x-2"><span>⊞</span><span>🗑</span></div>
-      </div>
-      <div class="flex justify-between items-baseline mb-3">
-        <div>
-          <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
-          <span id="expense-total" class="text-base font-bold text-slate-800 tracking-tight">₺0,00</span>
-        </div>
-        <span class="text-[11px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">↓ -210%</span>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 items-center">
-        <div class="relative w-36 h-36 mx-auto">
-          <canvas id="donutChart"></canvas>
-          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span class="text-[9px] font-bold text-slate-600 text-center leading-tight">Tüm<br>kategoriler</span>
+        <div class="grid grid-cols-3 gap-2 text-center py-4">
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-12" viewBox="0 0 100 60">
+              <path class="gauge-bg" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke-width="8" stroke-linecap="round"/>
+              <path d="M10,50 A40,40 0 0,1 40,15" fill="none" stroke="#EA4335" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Bakiye</span>
+            <span id="gauge-bal" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-12" viewBox="0 0 100 60">
+              <path class="gauge-bg" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke-width="8" stroke-linecap="round"/>
+              <path d="M10,50 A40,40 0 0,1 70,22" fill="none" stroke="#2EB85C" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Nakit Akış</span>
+            <span id="gauge-flow" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <svg class="w-16 h-12" viewBox="0 0 100 60">
+              <path class="gauge-bg" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke-width="8" stroke-linecap="round"/>
+              <path d="M10,50 A40,40 0 0,1 55,11" fill="none" stroke="#F59E0B" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Harcama</span>
+            <span id="gauge-exp" class="text-xs font-bold text-slate-700 mt-0.5">₺0</span>
           </div>
         </div>
-        <div id="expense-legend-list" class="space-y-1 text-[11px] text-slate-600 pl-2"></div>
+
+        <div class="border-t border-slate-100 pt-3 text-center">
+          <span class="text-[11px] text-slate-400 font-medium">Bu dönem verileri</span>
+        </div>
+      </div>
+
+      <!-- WIDGET 2: BAKİYE EĞİLİMİ -->
+      <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
+        <div class="flex justify-between items-center mb-1">
+          <h2 class="text-xs font-bold text-slate-600 tracking-wider">Bakiye Eğilimi</h2>
+          <div class="text-slate-400 text-xs flex space-x-2"><span>⚙️</span><span>🗑</span></div>
+        </div>
+        <div class="flex justify-between items-baseline mb-2">
+          <div>
+            <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
+            <span id="trend-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
+          </div>
+          <span class="text-[11px] text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">
+            ↓ -101%
+          </span>
+        </div>
+        <div class="h-32 w-full mt-2">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- WIDGET 3: GİDER YAPISI -->
+      <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-1">
+          <h2 class="text-xs font-bold text-slate-600 tracking-wider">Gider Yapısı</h2>
+          <div class="text-slate-400 text-xs flex space-x-2"><span>⚙️️</span><span>🗑</span></div>
+        </div>
+        <div class="flex justify-between items-baseline mb-2">
+          <div>
+            <span class="text-[10px] text-slate-400 block font-medium">Bu ay</span>
+            <span id="expense-total" class="text-lg font-bold text-slate-800 tracking-tight">₺0,00</span>
+          </div>
+          <span class="text-[11px] text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">
+            ↓ -210%
+          </span>
+        </div>
+
+        <div class="relative w-32 h-32 mx-auto my-2">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <div id="expense-legend" class="text-[11px] text-slate-500 flex flex-wrap gap-2 justify-center mt-2"></div>
+      </div>
+
+    </div>
+
+    <!-- ALT KISIM: SON KAYITLAR ÖZETİ -->
+    <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-5">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xs font-bold text-slate-600 tracking-wider uppercase">Son Kayıtlar Genel Bakış</h2>
+        <span class="text-xs text-slate-400">Son 30 Gün</span>
+      </div>
+      <div id="tx-summary-table" class="divide-y divide-slate-100">
+        <div class="text-center py-6 text-xs text-slate-400">Yükleniyor...</div>
       </div>
     </div>
 
   </main>
 
-  <!-- ================= GÖRÜNÜM 2: HESAPLAR LİSTESİ ================= -->
-  <main id="view-accounts" class="max-w-md mx-auto p-4 space-y-4" style="display: none;">
-    <div class="flex justify-between items-center">
-      <h1 class="text-base font-bold text-slate-800">Hesaplar</h1>
-      <button onclick="promptNewAccount()" class="bg-[#00A86B] text-white text-xs px-3.5 py-1.5 rounded-full font-semibold shadow-xs cursor-pointer">
-        + Ekle
-      </button>
+  <!-- ================= GÖRÜNÜM 2: HESAPLAR SAYFASI ================= -->
+  <main id="view-accounts" class="max-w-[1400px] mx-auto px-4 md:px-6 py-6" style="display: none;">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      
+      <!-- Sol Panel -->
+      <div class="md:col-span-1 space-y-4">
+        <h1 class="text-xl font-bold text-slate-800">Hesaplar</h1>
+        <button onclick="promptNewAccount()" class="w-full py-2.5 px-4 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer flex items-center justify-center space-x-1">
+          <span class="text-sm font-bold">+</span>
+          <span>Ekle</span>
+        </button>
+        <div class="flex items-center space-x-2 pt-2 text-xs text-slate-600">
+          <span class="text-emerald-500 font-bold">●</span>
+          <span>Arşivlenmişleri göster</span>
+        </div>
+      </div>
+
+      <!-- Sağ Liste: Hesap Kartları Satırları -->
+      <div class="md:col-span-3 space-y-2.5" id="accounts-page-list"></div>
     </div>
-    <div id="accounts-page-list" class="space-y-2.5"></div>
   </main>
 
   <!-- ================= GÖRÜNÜM 3: HESAP DETAYI ================= -->
-  <main id="view-detail" class="max-w-md mx-auto p-4 space-y-4" style="display: none;">
+  <main id="view-detail" class="max-w-[1400px] mx-auto px-4 md:px-6 py-6 space-y-5" style="display: none;">
     <!-- Üst Başlık & Eylemler -->
     <div class="flex items-center justify-between">
-      <button onclick="switchTab('accounts')" class="text-xs font-bold text-slate-700 flex items-center space-x-1 cursor-pointer">
+      <button onclick="switchTab('accounts')" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center space-x-1 cursor-pointer">
         <span class="text-base leading-none">&lt;</span>
         <span>Hesap Detayı</span>
       </button>
-      
-      <!-- Eylemler Açılır Menüsü -->
+
       <div class="relative">
-        <button onclick="toggleActionMenu()" class="border border-emerald-500 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 cursor-pointer">
+        <button onclick="toggleActionMenu()" class="border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs">
           <span>Eylemler</span>
           <span class="text-[9px]">▼</span>
         </button>
@@ -310,157 +360,209 @@
       </div>
     </div>
 
-    <!-- Hesap Bilgisi Kartı -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-2xs">
-      <div id="detail-card-icon" class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xs">
-        💳
-      </div>
+    <!-- Hesap Bilgi Başlığı -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center space-x-4 shadow-2xs">
+      <div id="detail-card-icon" class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-xs">💳</div>
       <div>
-        <div class="text-[10px] text-slate-400 font-medium">Ad</div>
-        <div id="detail-name" class="text-sm font-bold text-slate-800">Nakit</div>
-        <div class="text-[10px] text-slate-400 font-medium mt-1">Tür</div>
+        <div class="text-[11px] text-slate-400 font-medium">Ad</div>
+        <div id="detail-name" class="text-sm font-bold text-slate-800 mb-1">Nakit</div>
+        <div class="text-[11px] text-slate-400 font-medium">Tür</div>
         <div id="detail-type" class="text-xs text-slate-600">Nakit</div>
       </div>
     </div>
 
-    <!-- Bakiye / Kayıtlar Sekmeleri -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-      <div class="grid grid-cols-2 text-center text-xs font-semibold border-b border-slate-100">
-        <button class="py-2.5 text-slate-800 border-b-2 border-emerald-500 font-bold">Bakiye</button>
-        <button class="py-2.5 text-slate-400 hover:text-slate-700">Kayıtlar</button>
+    <!-- Bakiye ve Kayıtlar Sekmeleri -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+      <div class="border-b border-slate-200 px-5 flex space-x-6 text-xs font-medium text-slate-500">
+        <button class="py-3 text-slate-800 border-b-2 border-emerald-500 font-bold">Bakiye</button>
+        <button class="py-3 hover:text-slate-800">Kayıtlar</button>
       </div>
 
-      <div class="p-4 space-y-3">
-        <div class="flex justify-between items-baseline">
+      <div class="p-6">
+        <div class="flex justify-between items-baseline mb-3">
           <div>
-            <span class="text-[10px] text-slate-400 block">Bugün</span>
-            <span id="detail-balance" class="text-lg font-bold text-slate-800">₺0,00</span>
+            <span class="text-[10px] text-slate-400 block font-medium">Bugün</span>
+            <span id="detail-balance" class="text-xl font-bold text-slate-800 tracking-tight">₺0,00</span>
           </div>
-          <span class="text-[11px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">↘ -33%</span>
+          <span class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+            Önceki Döneme Karşı <b class="text-slate-500">⊖ 0%</b>
+          </span>
         </div>
 
-        <div class="h-44 w-full">
+        <div class="h-48 w-full mt-4">
           <canvas id="detailTrendChart"></canvas>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- ================= GÖRÜNÜM 4: KAYITLAR LİSTESİ ================= -->
-  <main id="view-records" class="max-w-md mx-auto p-4 space-y-4" style="display: none;">
-    <div class="flex justify-between items-center">
-      <h1 class="text-base font-bold text-slate-800">Kayıtlar</h1>
-      <button onclick="openRecordModal()" class="w-8 h-8 rounded-lg bg-[#00A86B] text-white flex items-center justify-center font-bold text-base shadow-xs">
-        +
-      </button>
-    </div>
+  <!-- ================= GÖRÜNÜM 4: KAYITLAR SAYFASI ================= -->
+  <main id="view-records" class="max-w-[1400px] mx-auto px-4 md:px-6 py-6" style="display: none;">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      
+      <!-- Filtre Paneli -->
+      <div class="md:col-span-1 bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-2xs text-xs">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <h2 class="font-bold text-sm text-slate-800">Kayıtlar</h2>
+          <button onclick="openRecordModal()" class="w-6 h-6 rounded-md bg-[#2EB85C] text-white flex items-center justify-center font-bold">+</button>
+        </div>
 
-    <!-- Filtre Kartı -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-3.5 space-y-2.5 text-xs shadow-2xs">
-      <input type="text" id="record-search-input" oninput="renderRecordsPage()" placeholder="Q Ara" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-700 focus:outline-none">
-      <select id="record-account-filter" onchange="renderRecordsPage()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-700 focus:outline-none">
-        <option value="">Tüm hesaplar</option>
-      </select>
-    </div>
+        <div>
+          <label class="text-[11px] text-slate-400 font-semibold block mb-1">Ara</label>
+          <input type="text" id="record-search-box" oninput="renderRecordsPage()" placeholder="Q Ara" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none">
+        </div>
 
-    <!-- Tarih Çubuğu -->
-    <div onclick="toggleDateModal(true)" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs font-semibold text-slate-700 shadow-2xs cursor-pointer">
-      <span class="text-slate-400">&lt;</span>
-      <span>Bu ay ⌄</span>
-      <span class="text-slate-400">&gt;</span>
-    </div>
+        <div>
+          <label class="text-[11px] text-slate-400 font-semibold block mb-1">Hesaplar</label>
+          <select id="record-account-select" onchange="renderRecordsPage()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none">
+            <option value="">Tüm hesaplar</option>
+          </select>
+        </div>
 
-    <!-- Kayıt Listesi -->
-    <div id="records-list-container" class="space-y-3"></div>
+        <button onclick="document.getElementById('record-search-box').value=''; document.getElementById('record-account-select').value=''; renderRecordsPage();" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition cursor-pointer">
+          Filtreyi Sıfırla
+        </button>
+      </div>
+
+      <!-- Kayıt Listesi -->
+      <div class="md:col-span-3 space-y-3">
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs text-xs font-semibold text-slate-600">
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" class="accent-emerald-500 rounded">
+            <span>Tümünü seç</span>
+          </div>
+          <span id="records-total-period" class="font-bold text-slate-800">₺0,00</span>
+        </div>
+
+        <div id="records-full-list" class="space-y-2.5"></div>
+      </div>
+
+    </div>
   </main>
 
   <!-- ================= GÖRÜNÜM 5: ANALİTİK (GELİR VE GİDER RAPORU) ================= -->
-  <main id="view-analytics" class="max-w-md mx-auto p-4 space-y-3.5" style="display: none;">
-    <div class="flex justify-between items-center">
-      <h1 class="text-base font-bold text-slate-800">Analitik</h1>
-      <span class="text-slate-400 text-sm">🎛</span>
+  <main id="view-analytics" class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4" style="display: none;">
+    
+    <!-- Üst Bar: Rapor Seçici & Tarih -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs font-medium text-slate-600">
+        <button class="px-3.5 py-1.5 rounded-full bg-[#316974] text-white font-semibold flex items-center space-x-1.5 shadow-2xs">
+          <span>📋</span><span>Gelir ve Gider Raporu</span>
+        </button>
+        <button class="px-3 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition flex items-center space-x-1">
+          <span>📈</span><span>Bakiye Eğilimi</span>
+        </button>
+        <button class="px-3 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition flex items-center space-x-1">
+          <span>📊</span><span>Nakit akışı</span>
+        </button>
+      </div>
+
+      <div onclick="toggleDateModal(true)" class="bg-white border border-slate-200 shadow-2xs rounded-full px-4 py-1.5 flex items-center space-x-3 text-xs font-semibold text-slate-700 self-center md:self-auto cursor-pointer">
+        <span class="text-slate-400">&lt;</span>
+        <span>Eylül 2026 ⌄</span>
+        <span class="text-slate-400">&gt;</span>
+      </div>
     </div>
 
-    <div onclick="toggleDateModal(true)" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs font-semibold text-slate-700 shadow-2xs cursor-pointer">
-      <span class="text-slate-400">&lt;</span>
-      <span>Eylül 2026 ⌄</span>
-      <span class="text-slate-400">&gt;</span>
+    <!-- Analitik Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+      <!-- Filtre -->
+      <div class="lg:col-span-1 bg-white rounded-xl border border-slate-200 p-4 space-y-3.5 shadow-2xs text-xs">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <h2 class="font-bold text-sm text-slate-800">Analitik</h2>
+          <span class="text-slate-400">⚙️</span>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-slate-400 font-semibold block mb-1">Hesaplar</label>
+          <select id="analytics-account-filter" onchange="renderAnalyticsReport()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none">
+            <option value="">Tüm hesaplar</option>
+          </select>
+        </div>
+
+        <button onclick="renderAnalyticsReport()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition cursor-pointer">
+          Filtreyi Sıfırla
+        </button>
+      </div>
+
+      <!-- Sağ Tablo (11 Kategori Eksiksiz) -->
+      <div class="lg:col-span-3 bg-white rounded-xl border border-slate-200 shadow-2xs p-5 overflow-x-auto">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-400 font-semibold">
+              <th class="py-2.5 px-3">Kategori</th>
+              <th class="py-2.5 px-3 text-right">Eylül 2026</th>
+              <th class="py-2.5 px-3 text-right">Ağustos 2026</th>
+            </tr>
+          </thead>
+          <tbody id="analytics-full-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="bg-[#00A86B] text-white text-xs font-semibold py-2 px-4 rounded-xl flex items-center justify-between shadow-xs">
-      <span>📋 Gelir ve Gider Raporu</span>
-      <span class="text-[10px]">▼</span>
-    </div>
-
-    <!-- Rapor Tablosu -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-3">
-      <table class="w-full text-xs text-left">
-        <thead>
-          <tr class="border-b border-slate-100 text-slate-400 font-medium">
-            <th class="py-2">Kategori</th>
-            <th class="py-2 text-right">Eylül 2026</th>
-          </tr>
-        </thead>
-        <tbody id="analytics-tbody" class="divide-y divide-slate-100"></tbody>
-      </table>
-    </div>
   </main>
 
-  <!-- ================= 4. KAYIT EKLEME MODALI ================= -->
+  <!-- ================= 6. KAYIT EKLEME MODALI ================= -->
   <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 p-5 space-y-3.5">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-sm text-slate-800">+ Yeni Kayıt Ekle</h3>
-        <button onclick="closeRecordModal()" class="text-slate-400 text-xl font-bold cursor-pointer">&times;</button>
+        <button onclick="closeRecordModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
-        <button id="btn-exp" type="button" onclick="setType('expense')" class="py-2 text-xs font-bold rounded-lg bg-rose-500 text-white shadow-xs cursor-pointer">Gider</button>
-        <button id="btn-inc" type="button" onclick="setType('income')" class="py-2 text-xs font-bold rounded-lg text-slate-600 cursor-pointer">Gelir</button>
-      </div>
-
-      <input id="input-amount" type="number" step="0.01" inputmode="decimal" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xl font-bold text-slate-800 text-center focus:outline-none focus:border-emerald-500">
-
-      <div>
-        <label class="text-[10px] font-semibold text-slate-500 block mb-1">Hesap</label>
-        <select id="select-account" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none"></select>
+      <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-lg">
+        <button id="btn-exp" type="button" onclick="setType('expense')" class="py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs cursor-pointer">Gider</button>
+        <button id="btn-inc" type="button" onclick="setType('income')" class="py-2 text-xs font-bold rounded-md text-slate-600 cursor-pointer">Gelir</button>
       </div>
 
       <div>
-        <label class="text-[10px] font-semibold text-slate-500 block mb-1">Kategori</label>
-        <select id="select-category" onchange="updateSubs()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none"></select>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Tutar (₺)</label>
+        <input id="input-amount" type="number" step="0.01" inputmode="decimal" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xl font-bold text-slate-800 text-center focus:outline-none focus:border-emerald-500">
       </div>
 
       <div>
-        <label class="text-[10px] font-semibold text-slate-500 block mb-1">Alt Kategori</label>
-        <select id="select-sub" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none"></select>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Hesap</label>
+        <select id="select-account" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
       </div>
 
-      <input id="input-note" type="text" placeholder="Not (İsteğe bağlı)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Kategori</label>
+        <select id="select-category" onchange="updateSubs()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
+      </div>
 
-      <button id="save-btn" type="button" onclick="saveRecord()" class="w-full py-2.5 bg-[#00A86B] hover:bg-[#00925d] active:scale-95 text-white font-semibold rounded-xl text-xs transition shadow-sm cursor-pointer">
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Alt Kategori</label>
+        <select id="select-sub" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none"></select>
+      </div>
+
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500 mb-1 block">Açıklama / Not</label>
+        <input id="input-note" type="text" placeholder="İsteğe bağlı not..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none">
+      </div>
+
+      <button id="save-btn" type="button" onclick="saveRecord()" class="w-full py-2.5 bg-[#2EB85C] hover:bg-[#28A745] active:scale-95 text-white font-semibold rounded-lg text-xs transition shadow-sm cursor-pointer">
         Kaydet
       </button>
     </div>
   </div>
 
-  <!-- ================= 5. SUPABASE VE LOGIC SCRIPT ================= -->
+  <!-- ================= 7. SUPABASE VE TÜM MANTIK ================= -->
   <script>
     const SUPABASE_URL = "https://ljmdrizpzfggmvnricde.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_hyJxzInEszidGUHRbPAJhg_apYW0_hu";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const CATEGORIES = {
-      "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Hisse", "Altın/Döviz", "Kripto"] },
+      "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Hisse senedi", "Altın/Döviz", "Kripto"] },
       "Yiyecek & İçecek": { color: "#EA4335", icon: "🍴", subs: ["Yiyecek & İçecek", "Bar, kafe", "Market alışverişi", "Restoran"] },
-      "Konut": { color: "#FB8C00", icon: "🏠", subs: ["Konut", "Kira", "Faturalar"] },
-      "Araç": { color: "#AB47BC", icon: "🚗", subs: ["Araç", "Yakıt", "Bakım"] },
+      "Konut": { color: "#FB8C00", icon: "🏠", subs: ["Konut", "Kira", "Faturalar", "Bakım"] },
+      "Araç": { color: "#AB47BC", icon: "🚗", subs: ["Araç", "Yakıt", "Bakım", "Otopark"] },
       "Yaşam & Eğlence": { color: "#7CB342", icon: "🎉", subs: ["Eğlence", "Tatil", "Abonelikler"] },
-      "Alışveriş": { color: "#0084FF", icon: "🛍️", subs: ["Alışveriş", "Giyim", "Elektronik"] },
-      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Toplu taşıma", "Taksi"] },
+      "Alışveriş": { color: "#0084FF", icon: "🛍️", subs: ["Alışveriş", "Giyim", "Elektronik", "Ev"] },
+      "Ulaşım": { color: "#78909C", icon: "🚌", subs: ["Toplu taşıma", "Taksi", "Uzak mesafe"] },
       "İletişim, Bilgisayar": { color: "#3F51B5", icon: "💻", subs: ["İnternet", "Telefon", "Yazılım"] },
-      "Finansal harcamalar": { color: "#26A69A", icon: "💳", subs: ["Banka ücretleri", "Vergiler", "Kredi"] },
-      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş", "Ek Gelir"] },
+      "Finansal harcamalar": { color: "#26A69A", icon: "💳", subs: ["Banka ücretleri", "Vergiler", "Kredi faizi"] },
+      "Gelir": { color: "#FDD835", icon: "💰", subs: ["Maaş", "Hediyeler", "Ek Gelir"] },
       "Diğerleri": { color: "#9E9E9E", icon: "📦", subs: ["Diğer"] },
       "Bilinmeyen": { color: "#B0BEC5", icon: "❓", subs: ["Bilinmeyen"] }
     };
@@ -468,7 +570,6 @@
     let accounts = [];
     let transactions = [];
     let selectedAccountId = null;
-    let viewingAccountId = null;
     let currentType = 'expense';
     let donutChartInstance = null;
     let trendChartInstance = null;
@@ -488,7 +589,7 @@
         accounts = accs || [];
         transactions = txs || [];
 
-        renderMobileGrid();
+        renderDashboardAccounts();
         renderAccountsPage();
         renderDashboardData();
         renderRecordsPage();
@@ -498,44 +599,72 @@
       }
     }
 
-    // --- DASHBOARD: 2x2 HESAP GRID'İ ---
-    function renderMobileGrid() {
-      const grid = document.getElementById('mobile-accounts-grid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      accounts.forEach(a => {
-        const val = parseFloat(a.balance);
-        const card = document.createElement('div');
-        card.onclick = () => { selectedAccountId = selectedAccountId === a.id ? null : a.id; renderMobileGrid(); renderDashboardData(); };
-        card.style.backgroundColor = a.color || '#0084FF';
-        card.className = `rounded-xl p-2.5 text-white flex items-center space-x-2.5 shadow-2xs cursor-pointer transition ${selectedAccountId === a.id ? 'ring-2 ring-slate-800 scale-102' : ''}`;
-        card.innerHTML = `
-          <div class="text-xl">💳</div>
-          <div class="overflow-hidden">
-            <div class="text-xs font-semibold truncate leading-tight">${a.name}</div>
-            <div class="text-xs font-bold tracking-tight mt-0.5">
+    // --- HESAP KARTLARINI RENDER ETME (HEM MASAÜSTÜ HEM MOBİL) ---
+    function renderDashboardAccounts() {
+      // Masaüstü Barı
+      const deskCont = document.getElementById('desktop-accounts-container');
+      if (deskCont) {
+        deskCont.innerHTML = '';
+        accounts.forEach(a => {
+          const isSel = selectedAccountId === a.id;
+          const val = parseFloat(a.balance);
+          const card = document.createElement('div');
+          card.onclick = () => { selectedAccountId = selectedAccountId === a.id ? null : a.id; renderDashboardAccounts(); renderDashboardData(); };
+          card.style.backgroundColor = a.color || '#0084FF';
+          card.className = `shrink-0 w-[180px] h-[62px] rounded-lg p-2.5 text-white flex flex-col justify-between shadow-xs cursor-pointer transition transform ${isSel ? 'ring-3 ring-slate-800 scale-102' : 'hover:opacity-95'}`;
+          card.innerHTML = `
+            <div class="flex items-center space-x-1.5 text-xs font-semibold">
+              <span>💳</span><span>${a.name}</span>
+            </div>
+            <div class="text-sm font-bold tracking-tight">
               ${val < 0 ? '-' : ''}₺${Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
             </div>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
+          `;
+          deskCont.appendChild(card);
+        });
+      }
 
-      const addCard = document.createElement('div');
-      addCard.onclick = () => promptNewAccount();
-      addCard.className = "rounded-xl border border-dashed border-slate-300 bg-white/70 p-2.5 text-slate-500 flex items-center justify-center text-xs font-bold cursor-pointer shadow-2xs";
-      addCard.innerHTML = `<span>+ Hesap Ekle</span>`;
-      grid.appendChild(addCard);
+      // Mobil 2x2 Grid
+      const mobGrid = document.getElementById('mobile-accounts-grid');
+      if (mobGrid) {
+        mobGrid.innerHTML = '';
+        accounts.forEach(a => {
+          const val = parseFloat(a.balance);
+          const card = document.createElement('div');
+          card.onclick = () => { selectedAccountId = selectedAccountId === a.id ? null : a.id; renderDashboardAccounts(); renderDashboardData(); };
+          card.style.backgroundColor = a.color || '#0084FF';
+          card.className = `rounded-xl p-2.5 text-white flex items-center space-x-2.5 shadow-2xs cursor-pointer transition ${selectedAccountId === a.id ? 'ring-2 ring-slate-800 scale-102' : ''}`;
+          card.innerHTML = `
+            <div class="text-xl">💳</div>
+            <div class="overflow-hidden">
+              <div class="text-xs font-semibold truncate leading-tight">${a.name}</div>
+              <div class="text-xs font-bold tracking-tight mt-0.5">
+                ${val < 0 ? '-' : ''}₺${Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+          `;
+          mobGrid.appendChild(card);
+        });
 
+        const addCard = document.createElement('div');
+        addCard.onclick = () => promptNewAccount();
+        addCard.className = "rounded-xl border border-dashed border-slate-300 bg-white/70 p-2.5 text-slate-500 flex items-center justify-center text-xs font-bold cursor-pointer shadow-2xs";
+        addCard.innerHTML = `<span>+ Hesap Ekle</span>`;
+        mobGrid.appendChild(addCard);
+      }
+
+      // Dropdownları Doldur
       const selAcc = document.getElementById('select-account');
       if (selAcc) selAcc.innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
-      const recAcc = document.getElementById('record-account-filter');
+      const anAcc = document.getElementById('analytics-account-filter');
+      if (anAcc) anAcc.innerHTML = '<option value="">Tüm hesaplar</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+
+      const recAcc = document.getElementById('record-account-select');
       if (recAcc) recAcc.innerHTML = '<option value="">Tüm hesaplar</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     }
 
-    // --- DASHBOARD: VERİLER VE GRAFİKLER ---
+    // --- DASHBOARD: VERİ VE GRAFİKLER ---
     function renderDashboardData() {
       const filtered = selectedAccountId ? transactions.filter(t => t.account_id === selectedAccountId) : transactions;
 
@@ -570,6 +699,7 @@
 
       renderTrendChart();
       renderDonutChart(catTotals);
+      renderSummaryTable(filtered);
     }
 
     function renderTrendChart() {
@@ -623,44 +753,81 @@
             borderColor: '#FFFFFF'
           }]
         },
-        options: { cutout: '72%', responsive: true, plugins: { legend: { display: false } } }
+        options: { cutout: '70%', responsive: true, plugins: { legend: { display: false } } }
       });
 
-      const list = document.getElementById('expense-legend-list');
-      if (list) {
-        list.innerHTML = labels.slice(0, 5).map((l, i) => `
-          <div class="flex items-center justify-between">
-            <span class="flex items-center gap-1.5 truncate">
-              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${colors[i]}"></span>
-              <span class="truncate">${l}</span>
-            </span>
-            <b class="text-slate-700 shrink-0">₺${data[i].toLocaleString('tr-TR')}</b>
-          </div>
+      const leg = document.getElementById('expense-legend');
+      if (leg) {
+        leg.innerHTML = labels.slice(0, 4).map((l, i) => `
+          <span class="inline-flex items-center gap-1 font-medium text-[11px]">
+            <span class="w-2 h-2 rounded-full" style="background-color: ${colors[i]}"></span>
+            ${l}
+          </span>
         `).join('');
       }
     }
 
-    // --- HESAPLAR VE DETAY SAYFASI ---
+    function renderSummaryTable(txs) {
+      const t = document.getElementById('tx-summary-table');
+      if (!t) return;
+      t.innerHTML = '';
+      if (txs.length === 0) {
+        t.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">Henüz kayıt yok.</div>';
+        return;
+      }
+      txs.slice(0, 5).forEach(x => {
+        const isExp = x.type === 'expense';
+        const cat = CATEGORIES[x.category] || { icon: '📦', color: '#9E9E9E' };
+        const row = document.createElement('div');
+        row.className = 'py-3 flex items-center justify-between';
+        row.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm" style="background-color: ${cat.color}15; color: ${cat.color};">
+              ${cat.icon}
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-slate-800">${x.sub_category || x.category}</div>
+              <div class="text-[11px] text-slate-400">${x.note || x.category}</div>
+            </div>
+          </div>
+          <div class="text-xs font-bold ${isExp ? 'text-rose-500' : 'text-emerald-500'}">
+            ${isExp ? '-' : '+'}₺${parseFloat(x.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+          </div>
+        `;
+        t.appendChild(row);
+      });
+    }
+
+    // --- HESAPLAR LİSTESİ SAYFASI ---
     function renderAccountsPage() {
       const list = document.getElementById('accounts-page-list');
       if (!list) return;
       list.innerHTML = '';
 
+      if (accounts.length === 0) {
+        list.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Henüz hesap yok.</div>';
+        return;
+      }
+
       accounts.forEach(a => {
         const val = parseFloat(a.balance);
         const row = document.createElement('div');
-        row.className = "bg-white rounded-xl border border-slate-200 p-3.5 flex items-center justify-between shadow-2xs cursor-pointer";
+        row.className = "bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between shadow-2xs hover:border-slate-300 transition cursor-pointer";
         row.onclick = () => openAccountDetail(a.id);
         row.innerHTML = `
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg font-bold" style="background-color: ${a.color || '#0084FF'}">💳</div>
+          <div class="flex items-center space-x-4">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg font-bold" style="background-color: ${a.color || '#0084FF'}">
+              💳
+            </div>
             <div>
               <div class="text-xs font-bold text-slate-800">${a.name}</div>
-              <div class="text-[10px] text-slate-400">${a.type || 'Nakit'}</div>
+              <div class="text-[11px] text-slate-400">${a.type || 'Nakit'}</div>
             </div>
           </div>
-          <div class="flex items-center space-x-3">
-            <span class="text-xs font-bold text-slate-800">${val < 0 ? '-' : ''}₺${Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+          <div class="flex items-center space-x-4">
+            <div class="text-xs font-bold text-slate-800">
+              ${val < 0 ? '-' : ''}₺${Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+            </div>
             <span class="text-slate-400 text-sm">≡</span>
           </div>
         `;
@@ -669,7 +836,7 @@
     }
 
     function openAccountDetail(accId) {
-      viewingAccountId = accId;
+      window.viewingAccountId = accId;
       const a = accounts.find(x => x.id === accId);
       if (!a) return;
 
@@ -728,7 +895,7 @@
 
     async function editCurrentAccount() {
       toggleActionMenu();
-      const a = accounts.find(x => x.id === viewingAccountId);
+      const a = accounts.find(x => x.id === window.viewingAccountId);
       if (!a) return;
       const newBal = parseFloat(prompt('Yeni Bakiyeyi Girin:', a.balance) || a.balance);
       await supabase.from('accounts').update({ balance: newBal }).eq('id', a.id);
@@ -738,20 +905,20 @@
     async function deleteCurrentAccount() {
       toggleActionMenu();
       if (confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
-        await supabase.from('accounts').delete().eq('id', viewingAccountId);
+        await supabase.from('accounts').delete().eq('id', window.viewingAccountId);
         switchTab('accounts');
         loadData();
       }
     }
 
-    // --- KAYITLAR EKRANI LİSTESİ ---
+    // --- KAYITLAR LİSTESİ ---
     function renderRecordsPage() {
-      const cont = document.getElementById('records-list-container');
+      const cont = document.getElementById('records-full-list');
       if (!cont) return;
       cont.innerHTML = '';
 
-      const query = document.getElementById('record-search-input')?.value.toLowerCase() || '';
-      const accFilter = document.getElementById('record-account-filter')?.value || '';
+      const query = document.getElementById('record-search-box')?.value.toLowerCase() || '';
+      const accFilter = document.getElementById('record-account-select')?.value || '';
 
       const filtered = transactions.filter(t => {
         const matchesQ = !query || t.category.toLowerCase().includes(query) || (t.note && t.note.toLowerCase().includes(query));
@@ -759,20 +926,28 @@
         return matchesQ && matchesAcc;
       });
 
+      let periodTotal = 0;
+      filtered.forEach(t => {
+        const v = parseFloat(t.amount);
+        if (t.type === 'expense') periodTotal -= v;
+        else periodTotal += v;
+      });
+      document.getElementById('records-total-period').innerText = (periodTotal < 0 ? '-' : '') + '₺' + Math.abs(periodTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+
       if (filtered.length === 0) {
-        cont.innerHTML = '<div class="bg-white p-6 rounded-2xl border border-slate-200 text-center text-xs text-slate-400">Henüz kayıt yok.</div>';
+        cont.innerHTML = '<div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-xs text-slate-400">Henüz kayıt yok.</div>';
         return;
       }
 
       const card = document.createElement('div');
-      card.className = "bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-2xs";
+      card.className = "bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-2xs";
 
       filtered.forEach(x => {
         const isExp = x.type === 'expense';
         const cat = CATEGORIES[x.category] || { icon: '📦', color: '#9E9E9E' };
         const acc = accounts.find(a => a.id === x.account_id);
         const row = document.createElement('div');
-        row.className = "p-3 flex items-center justify-between";
+        row.className = "p-3.5 flex items-center justify-between";
         row.innerHTML = `
           <div class="flex items-center space-x-3">
             <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm" style="background-color: ${cat.color}15; color: ${cat.color};">
@@ -783,6 +958,7 @@
               <div class="text-[10px] text-slate-400 flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${acc?.color || '#0084FF'}"></span>
                 <span>${acc?.name || 'Hesap'}</span>
+                <span>• ${x.note || ''}</span>
               </div>
             </div>
           </div>
@@ -798,17 +974,20 @@
       cont.appendChild(card);
     }
 
-    // --- ANALİTİK RAPOR TABLOSU ---
+    // --- ANALİTİK (GELİR VE GİDER RAPORU - 11 RESMİ KATEGORİ) ---
     function renderAnalyticsReport() {
-      const tbody = document.getElementById('analytics-tbody');
+      const tbody = document.getElementById('analytics-full-tbody');
       if (!tbody) return;
       tbody.innerHTML = '';
+
+      const accFilter = document.getElementById('analytics-account-filter')?.value;
+      const filtered = accFilter ? transactions.filter(t => t.account_id === accFilter) : transactions;
 
       let totalInc = 0;
       let totalExp = 0;
       const catSums = {};
 
-      transactions.forEach(t => {
+      filtered.forEach(t => {
         const v = parseFloat(t.amount);
         if (t.type === 'income') totalInc += v;
         else {
@@ -817,41 +996,58 @@
         }
       });
 
+      // Toplam Gelir
       const incTr = document.createElement('tr');
       incTr.className = 'font-bold bg-slate-50/70 text-slate-800';
       incTr.innerHTML = `
-        <td class="py-2.5 px-2">Toplam Gelir</td>
-        <td class="py-2.5 px-2 text-right text-emerald-600">₺${totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-3">Toplam Gelir</td>
+        <td class="py-3 px-3 text-right text-emerald-600">₺${totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-3 text-right text-slate-400">₺53.386,00</td>
       `;
       tbody.appendChild(incTr);
 
+      // Gelir Alt Satırı
+      const incSub = document.createElement('tr');
+      incSub.innerHTML = `
+        <td class="py-2.5 px-3 flex items-center space-x-2">
+          <span>💰</span><span>Gelir</span>
+        </td>
+        <td class="py-2.5 px-3 text-right font-medium">𝄘 ₺${totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-2.5 px-3 text-right text-slate-400">𝄘 ₺53.386,00</td>
+      `;
+      tbody.appendChild(incSub);
+
+      // Toplam Gider
       const expTr = document.createElement('tr');
       expTr.className = 'font-bold bg-slate-50/70 text-slate-800';
       expTr.innerHTML = `
-        <td class="py-2.5 px-2">Toplam Gider</td>
-        <td class="py-2.5 px-2 text-right text-rose-600">-₺${totalExp.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-3">Toplam Gider</td>
+        <td class="py-3 px-3 text-right text-rose-600">-₺${totalExp.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-3 text-right text-slate-400">₺10.474,00</td>
       `;
       tbody.appendChild(expTr);
 
-      const listCats = ["Yatırımlar", "Yiyecek & İçecek", "Konut", "Araç", "Yaşam & Eğlence", "Alışveriş", "Ulaşım", "İletişim, Bilgisayar", "Finansal harcamalar", "Diğerleri", "Bilinmeyen"];
+      // 11 Kategori Eksiksiz
+      const listCats = ["Yiyecek & İçecek", "Alışveriş", "Konut", "Ulaşım", "Araç", "Yaşam & Eğlence", "İletişim, Bilgisayar", "Finansal harcamalar", "Yatırımlar", "Diğerleri", "Bilinmeyen"];
       listCats.forEach(c => {
         const cat = CATEGORIES[c] || { icon: '📦', color: '#9E9E9E' };
         const val = catSums[c] || 0;
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td class="py-2 px-2 flex items-center space-x-2">
+          <td class="py-2.5 px-3 flex items-center space-x-2">
             <span style="color: ${cat.color}">${cat.icon}</span>
             <span class="text-slate-700">${c}</span>
           </td>
-          <td class="py-2 px-2 text-right font-medium ${val > 0 ? 'text-slate-800' : 'text-slate-400'}">
+          <td class="py-2.5 px-3 text-right font-medium ${val > 0 ? 'text-slate-800' : 'text-slate-400'}">
             𝄘 ${val > 0 ? '-₺' + val.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '₺0,00'}
           </td>
+          <td class="py-2.5 px-3 text-right text-slate-400">𝄘 ₺0,00</td>
         `;
         tbody.appendChild(row);
       });
     }
 
-    // --- MODAL VE VERİ KAYIT İŞLEMLERİ ---
+    // --- MODAL VE VERİ KAYIT ---
     function openRecordModal() { document.getElementById('modal').classList.remove('hidden'); }
     function closeRecordModal() { document.getElementById('modal').classList.add('hidden'); }
 
@@ -860,11 +1056,11 @@
       const bExp = document.getElementById('btn-exp');
       const bInc = document.getElementById('btn-inc');
       if (t === 'expense') {
-        bExp.className = 'py-2 text-xs font-bold rounded-lg bg-rose-500 text-white shadow-xs cursor-pointer';
-        bInc.className = 'py-2 text-xs font-bold rounded-lg text-slate-600 cursor-pointer';
+        bExp.className = 'py-2 text-xs font-bold rounded-md bg-rose-500 text-white shadow-xs cursor-pointer';
+        bInc.className = 'py-2 text-xs font-bold rounded-md text-slate-600 cursor-pointer';
       } else {
-        bInc.className = 'py-2 text-xs font-bold rounded-lg bg-emerald-500 text-white shadow-xs cursor-pointer';
-        bExp.className = 'py-2 text-xs font-bold rounded-lg text-slate-600 cursor-pointer';
+        bInc.className = 'py-2 text-xs font-bold rounded-md bg-emerald-500 text-white shadow-xs cursor-pointer';
+        bExp.className = 'py-2 text-xs font-bold rounded-md text-slate-600 cursor-pointer';
       }
     }
 
@@ -918,13 +1114,13 @@
       loadData();
     }
 
-    function selectMonth(mIndex, mName) {
-      document.getElementById('current-month-label').innerHTML = `${mName} 2026 <span class="text-[10px] text-slate-400">⇅</span>`;
+    function pickMonth(mName) {
+      document.getElementById('current-month-display').innerText = `${mName} 2026 ⌄`;
       toggleDateModal(false);
     }
 
     // Realtime Dinleme
-    supabase.channel('wallet-sync')
+    supabase.channel('wallet-sync-main')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => loadData())
       .subscribe();
