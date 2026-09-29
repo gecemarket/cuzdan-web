@@ -19,47 +19,44 @@
     .toggle-checkbox:checked + .toggle-label { background-color: #2EB85C; }
   </style>
 
-  <!-- ================= TÜM SAYFA & MODAL MOTORU (ASLA KİLİTLENMEZ) ================= -->
+  <!-- ================= TÜM ÇEKİRDEK FONKSİYONLAR (EN TEPEDE, KESİNTİSİZ) ================= -->
   <script>
     window.activeTab = 'dashboard';
     window.viewingAccountId = null;
     window.chosenAccColor = '#EA4335';
 
+    // Sekmeler Arası Geçiş
     window.switchTab = function(tabName) {
-      try {
-        window.activeTab = tabName;
-        toggleDrawer(false);
-        toggleDateModal(false);
+      window.activeTab = tabName;
+      toggleDrawer(false);
+      toggleDateModal(false);
 
-        const views = ['dashboard', 'accounts', 'detail', 'records', 'analytics'];
-        views.forEach(v => {
-          const el = document.getElementById('view-' + v);
-          if (el) el.style.display = 'none';
-        });
+      const views = ['dashboard', 'accounts', 'detail', 'records', 'analytics'];
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.style.display = 'none';
+      });
 
-        const target = document.getElementById('view-' + tabName);
-        if (target) target.style.display = 'block';
+      const target = document.getElementById('view-' + tabName);
+      if (target) target.style.display = 'block';
 
-        ['dashboard', 'accounts', 'records', 'analytics'].forEach(v => {
-          const dBtn = document.getElementById('d-tab-' + v);
-          if (dBtn) {
-            if (v === tabName || (v === 'accounts' && tabName === 'detail')) dBtn.classList.add('tab-btn-active');
-            else dBtn.classList.remove('tab-btn-active');
-          }
-          const mBtn = document.getElementById('m-tab-' + v);
-          if (mBtn) {
-            if (v === tabName || (v === 'accounts' && tabName === 'detail')) mBtn.classList.add('mobile-menu-active');
-            else mBtn.classList.remove('mobile-menu-active');
-          }
-        });
+      ['dashboard', 'accounts', 'records', 'analytics'].forEach(v => {
+        const dBtn = document.getElementById('d-tab-' + v);
+        if (dBtn) {
+          if (v === tabName || (v === 'accounts' && tabName === 'detail')) dBtn.classList.add('tab-btn-active');
+          else dBtn.classList.remove('tab-btn-active');
+        }
+        const mBtn = document.getElementById('m-tab-' + v);
+        if (mBtn) {
+          if (v === tabName || (v === 'accounts' && tabName === 'detail')) mBtn.classList.add('mobile-menu-active');
+          else mBtn.classList.remove('mobile-menu-active');
+        }
+      });
 
-        if (tabName === 'accounts' && typeof renderAccountsPage === 'function') renderAccountsPage();
-        if (tabName === 'analytics' && typeof renderAnalyticsReport === 'function') renderAnalyticsReport();
-        if (tabName === 'records' && typeof renderRecordsPage === 'function') renderRecordsPage();
-        if (tabName === 'dashboard' && typeof renderDashboardData === 'function') renderDashboardData();
-      } catch (err) {
-        console.error("switchTab hatası:", err);
-      }
+      if (tabName === 'accounts' && typeof renderAccountsPage === 'function') renderAccountsPage();
+      if (tabName === 'analytics' && typeof renderAnalyticsReport === 'function') renderAnalyticsReport();
+      if (tabName === 'records' && typeof renderRecordsPage === 'function') renderRecordsPage();
+      if (tabName === 'dashboard' && typeof renderDashboardData === 'function') renderDashboardData();
     };
 
     window.toggleDrawer = function(open) {
@@ -72,17 +69,15 @@
       if (m) m.style.display = open ? 'flex' : 'none';
     };
 
+    // Modal Açma / Kapatma
     window.openAccountModal = function() {
-      try {
-        document.getElementById('acc-name-input').value = '';
-        document.getElementById('acc-balance-input').value = '-15000';
-        document.getElementById('acc-type-select').value = 'Kredi kartı';
-        pickColor('#EA4335');
-        const m = document.getElementById('account-modal');
-        if (m) m.style.display = 'flex';
-      } catch (e) {
-        console.error("openAccountModal hatası:", e);
-      }
+      const nameInput = document.getElementById('acc-name-input');
+      const balInput = document.getElementById('acc-balance-input');
+      if (nameInput) nameInput.value = '';
+      if (balInput) balInput.value = '-15000';
+      pickColor('#EA4335');
+      const m = document.getElementById('account-modal');
+      if (m) m.style.display = 'flex';
     };
 
     window.closeAccountModal = function() {
@@ -101,13 +96,9 @@
     };
 
     window.openRecordModal = function(type = 'expense') {
-      try {
-        if (typeof setType === 'function') setType(type);
-        const m = document.getElementById('record-modal');
-        if (m) m.style.display = 'flex';
-      } catch (e) {
-        console.error("openRecordModal hatası:", e);
-      }
+      if (typeof setType === 'function') setType(type);
+      const m = document.getElementById('record-modal');
+      if (m) m.style.display = 'flex';
     };
 
     window.closeRecordModal = function() {
@@ -203,18 +194,18 @@
         <button type="button" class="text-slate-400 hover:text-slate-700">&gt;</button>
       </div>
       <div class="grid grid-cols-3 gap-2 text-xs font-medium text-slate-700 text-center">
-        <button type="button" onclick="pickMonth('Ocak')" class="p-2.5 rounded-xl hover:bg-slate-100">Oca</button>
-        <button type="button" onclick="pickMonth('Şubat')" class="p-2.5 rounded-xl hover:bg-slate-100">Şub</button>
-        <button type="button" onclick="pickMonth('Mart')" class="p-2.5 rounded-xl hover:bg-slate-100">Mar</button>
-        <button type="button" onclick="pickMonth('Nisan')" class="p-2.5 rounded-xl hover:bg-slate-100">Nis</button>
-        <button type="button" onclick="pickMonth('Mayıs')" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
-        <button type="button" onclick="pickMonth('Haziran')" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
-        <button type="button" onclick="pickMonth('Temmuz')" class="p-2.5 rounded-xl hover:bg-slate-100">Tem</button>
-        <button type="button" onclick="pickMonth('Ağustos')" class="p-2.5 rounded-xl hover:bg-slate-100">Ağu</button>
-        <button type="button" onclick="pickMonth('Eylül')" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Eyl</button>
-        <button type="button" onclick="pickMonth('Ekim')" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
-        <button type="button" onclick="pickMonth('Kasım')" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
-        <button type="button" onclick="pickMonth('Aralık')" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Oca</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Şub</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Mar</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Nis</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">May</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Haz</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Tem</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Ağu</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl bg-[#2EB85C] text-white font-bold shadow-xs">Eyl</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Eki</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Kas</button>
+        <button type="button" onclick="toggleDateModal(false)" class="p-2.5 rounded-xl hover:bg-slate-100">Ara</button>
       </div>
       <button type="button" onclick="toggleDateModal(false)" class="w-full py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold cursor-pointer">Kapat</button>
     </div>
@@ -380,7 +371,7 @@
             <span>➕</span><span>Ödeme Yap</span>
           </button>
           <button type="button" onclick="deleteCurrentAccount()" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 rounded-lg text-rose-600 flex items-center gap-2 cursor-pointer">
-            <span>🗑️️</span><span>Sil</span>
+            <span>🗑</span><span>Sil</span>
           </button>
         </div>
       </div>
@@ -600,11 +591,14 @@
     </div>
   </div>
 
-  <!-- ================= 8. JS MANTIĞI VE VERİ MOTORU ================= -->
+  <!-- ================= 8. GÜVENLİ VE HIZLI JS VERİ MOTORU ================= -->
   <script>
+    // Supabase Bağlantısı (İsim çakışması engellendi)
     const SUPABASE_URL = "https://ljmdrizpzfggmvnricde.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_hyJxzInEszidGUHRbPAJhg_apYW0_hu";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sbClient = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
 
     const CATEGORIES = {
       "Yatırımlar": { color: "#EC407A", icon: "📈", subs: ["Hisse senedi", "Altın/Döviz", "Kripto"] },
@@ -623,8 +617,7 @@
 
     let defaultAccounts = [
       { id: "acc-nakit-1", name: "Nakit", type: "Nakit", balance: 57915, color: "#0084FF" },
-      { id: "acc-qnb-2", name: "QNB", type: "Kredi kartı", balance: -42210, color: "#8E44AD" },
-      { id: "acc-ziraat-3", name: "Ziraat", type: "Kredi kartı", balance: -15000, color: "#EA4335" }
+      { id: "acc-qnb-2", name: "QNB", type: "Kredi kartı", balance: -42210, color: "#8E44AD" }
     ];
 
     let accounts = [];
@@ -636,98 +629,105 @@
     let trendChartInstance = null;
     let detailChartInstance = null;
 
-    async function loadData() {
-      try {
-        const localAccs = JSON.parse(localStorage.getItem('bb_wallet_accounts') || '[]');
-        if (localAccs.length > 0) {
-          accounts = localAccs;
-        } else {
-          accounts = defaultAccounts;
-          localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
-        }
-
-        transactions = JSON.parse(localStorage.getItem('bb_wallet_txs') || '[]');
-
-        renderDashboardAccounts();
-        renderAccountsPage();
-        renderDashboardData();
-        renderRecordsPage();
-        renderAnalyticsReport();
-
-        // Arka planda Supabase'den çek
-        const { data: accs } = await supabase.from('accounts').select('*').order('created_at');
-        const { data: txs } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
-
-        if (accs && accs.length > 0) {
-          accounts = accs;
-          localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
-        }
-        if (txs && txs.length > 0) {
-          transactions = txs;
-          localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
-        }
-
-        renderDashboardAccounts();
-        renderAccountsPage();
-        renderDashboardData();
-        renderRecordsPage();
-        renderAnalyticsReport();
-
-        if (viewingAccountId) openAccountDetail(viewingAccountId, false);
-      } catch (err) {
-        console.warn("Supabase bağlantısı bekleniyor, yerel veri devrede:", err);
-      }
-    }
-
-    // --- GARANTİLİ HESAP EKLEME ---
+    // --- ANINDA HESAP OLUŞTURMA (HİÇBİR ŞEYE TAKILMAZ) ---
     window.saveNewAccount = async function() {
-      const name = document.getElementById('acc-name-input').value.trim();
-      const balStr = document.getElementById('acc-balance-input').value.trim();
-      const type = document.getElementById('acc-type-select').value;
+      const nameInput = document.getElementById('acc-name-input');
+      const balInput = document.getElementById('acc-balance-input');
+      const typeSelect = document.getElementById('acc-type-select');
 
+      const name = nameInput ? nameInput.value.trim() : '';
       if (!name) return alert('Lütfen hesap adını girin!');
-      const balance = parseFloat(balStr || '0');
+
+      const balance = parseFloat(balInput ? balInput.value : '0') || 0;
+      const type = typeSelect ? typeSelect.value : 'Kredi kartı';
+      const color = window.chosenAccColor || '#EA4335';
 
       const btn = document.getElementById('acc-save-btn');
-      btn.innerText = 'Ekleniyor...';
-      btn.disabled = true;
+      if (btn) btn.innerText = 'Ekleniyor...';
 
+      // 1. Yeni Hesabı Oluştur
       const newAcc = {
         id: 'acc_' + Date.now(),
         name: name,
         type: type,
         balance: balance,
-        color: window.chosenAccColor || '#EA4335'
+        color: color
       };
 
-      // Anında listeye koy ve sakla
+      // 2. Anında Ekrana ve LocalStorage'a Ekle
       accounts.push(newAcc);
       localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
       
       renderDashboardAccounts();
       renderAccountsPage();
       renderDashboardData();
-
-      // Arka planda veritabanına yolla
-      try {
-        await supabase.from('accounts').insert([{
-          name: name,
-          type: type,
-          balance: balance,
-          color: window.chosenAccColor
-        }]);
-      } catch(e) {
-        console.warn("Supabase'e arka planda kaydedilecek:", e);
-      }
-
-      btn.innerText = 'Hesap oluştur';
-      btn.disabled = false;
       closeAccountModal();
+
+      if (btn) btn.innerText = 'Hesap oluştur';
+
+      // 3. Arka Planda Supabase'e Yaz
+      if (sbClient) {
+        try {
+          await sbClient.from('accounts').insert([{
+            name: name,
+            type: type,
+            balance: balance,
+            color: color
+          }]);
+        } catch (e) {
+          console.warn("Supabase senkronizasyonu arka planda bekletildi:", e);
+        }
+      }
     };
 
-    // --- HESAP KARTLARINI ÇİZME ---
+    // --- VERİLERİ YÜKLEME ---
+    async function loadData() {
+      const localAccs = JSON.parse(localStorage.getItem('bb_wallet_accounts') || '[]');
+      if (localAccs.length > 0) {
+        accounts = localAccs;
+      } else {
+        accounts = defaultAccounts;
+        localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
+      }
+
+      transactions = JSON.parse(localStorage.getItem('bb_wallet_txs') || '[]');
+
+      renderDashboardAccounts();
+      renderAccountsPage();
+      renderDashboardData();
+      renderRecordsPage();
+      renderAnalyticsReport();
+
+      if (sbClient) {
+        try {
+          const { data: accs } = await sbClient.from('accounts').select('*').order('created_at');
+          const { data: txs } = await sbClient.from('transactions').select('*').order('created_at', { ascending: false });
+
+          if (accs && accs.length > 0) {
+            accounts = accs;
+            localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
+          }
+          if (txs && txs.length > 0) {
+            transactions = txs;
+            localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
+          }
+
+          renderDashboardAccounts();
+          renderAccountsPage();
+          renderDashboardData();
+          renderRecordsPage();
+          renderAnalyticsReport();
+
+          if (viewingAccountId) openAccountDetail(viewingAccountId, false);
+        } catch (err) {
+          console.warn("Supabase verileri okunurken yerel veri devrede kaldı:", err);
+        }
+      }
+    }
+
+    // --- HESAP KARTLARI (2x2 MOBİL VE YATAY MASAÜSTÜ) ---
     function renderDashboardAccounts() {
-      // Masaüstü Barı
+      // Masaüstü Yatay Bar
       const deskCont = document.getElementById('desktop-accounts-container');
       if (deskCont) {
         deskCont.innerHTML = '';
@@ -750,7 +750,7 @@
         });
       }
 
-      // Mobil 2x2 Grid (Attığınız Fotoğrafın Birebir Aynısı)
+      // Mobil 2x2 Grid
       const mobGrid = document.getElementById('mobile-accounts-grid');
       if (mobGrid) {
         mobGrid.innerHTML = '';
@@ -788,7 +788,7 @@
       if (recAcc) recAcc.innerHTML = '<option value="">Tüm hesaplar</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     }
 
-    // --- DASHBOARD VERİLERİ VE ÇÖKMEYEN GRAFİK ---
+    // --- DASHBOARD VERİLERİ VE GRAFİKLER ---
     function renderDashboardData() {
       const filtered = selectedAccountId ? transactions.filter(t => t.account_id === selectedAccountId) : transactions;
 
@@ -858,10 +858,7 @@
               y: {
                 min: minVal < 0 ? minVal * 1.25 : -1000,
                 max: maxVal > 0 ? maxVal * 1.25 : Math.abs(minVal) * 0.25,
-                grid: {
-                  color: (c) => (c && c.tick && c.tick.value === 0 ? '#475569' : '#F1F5F9'),
-                  lineWidth: (c) => (c && c.tick && c.tick.value === 0 ? 2 : 1)
-                },
+                grid: { color: '#F1F5F9' },
                 ticks: {
                   font: { size: 9 },
                   color: '#94A3B8',
@@ -872,7 +869,7 @@
           }
         });
       } catch (err) {
-        console.error("renderTrendChart hatası:", err);
+        console.warn("renderTrendChart hatası:", err);
       }
     }
 
@@ -910,7 +907,7 @@
           `).join('');
         }
       } catch(e) {
-        console.error("renderDonutChart hatası:", e);
+        console.warn("renderDonutChart hatası:", e);
       }
     }
 
@@ -977,7 +974,7 @@
       });
     }
 
-    // --- HESAP DETAYI: 0 ÇİZGİSİ MERKEZLİ GRAFİK ---
+    // --- HESAP DETAYI: 0 ÇİZGİSİ TAM ORTADA GRAFİK ---
     function openAccountDetail(accId, shouldSwitch = true) {
       viewingAccountId = accId;
       const a = accounts.find(x => x.id === accId);
@@ -989,12 +986,12 @@
       document.getElementById('detail-balance').innerText = (val < 0 ? '-' : '') + '₺' + Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
       document.getElementById('detail-card-icon').style.backgroundColor = a.color || '#0084FF';
 
+      // 0 Çizgisini Merkezleyen Veri Noktaları
       const pts = [val * 0.95, val * 0.98, val * 1.02, val];
       if (detailChartInstance) detailChartInstance.destroy();
       const ctx = document.getElementById('detailTrendChart')?.getContext('2d');
       if (ctx) {
-        const minVal = Math.min(...pts, 0);
-        const maxVal = Math.max(...pts, 0);
+        const absVal = Math.max(Math.abs(val) * 1.35, 2000);
 
         detailChartInstance = new Chart(ctx, {
           type: 'line',
@@ -1019,16 +1016,17 @@
             scales: {
               x: { grid: { color: '#F8FAFC' }, ticks: { font: { size: 10 }, color: '#94A3B8' } },
               y: {
-                min: minVal < 0 ? minVal * 1.3 : -1000,
-                max: maxVal > 0 ? maxVal * 1.3 : Math.abs(minVal) * 0.35,
+                // 0 Çizgisini Tam Ortaya Sabitleyen Aralık
+                min: -absVal,
+                max: absVal,
                 grid: {
-                  color: (c) => (c && c.tick && c.tick.value === 0 ? '#475569' : '#E2E8F0'),
-                  lineWidth: (c) => (c && c.tick && c.tick.value === 0 ? 2 : 1),
-                  borderDash: (c) => (c && c.tick && c.tick.value === 0 ? [] : [4, 4])
+                  color: (c) => (c.tick && c.tick.value === 0 ? '#475569' : '#E2E8F0'),
+                  lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1),
+                  borderDash: (c) => (c.tick && c.tick.value === 0 ? [] : [4, 4])
                 },
                 ticks: {
                   font: { size: 10 },
-                  color: (c) => (c && c.tick && c.tick.value === 0 ? '#0F172A' : '#94A3B8'),
+                  color: (c) => (c.tick && c.tick.value === 0 ? '#0F172A' : '#94A3B8'),
                   callback: (v) => (v < 0 ? '-' : '') + '₺' + Math.abs(v).toLocaleString('tr-TR')
                 }
               }
@@ -1044,7 +1042,9 @@
       if (confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
         accounts = accounts.filter(x => x.id !== viewingAccountId);
         localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
-        try { await supabase.from('accounts').delete().eq('id', viewingAccountId); } catch(e){}
+        if (sbClient) {
+          try { await sbClient.from('accounts').delete().eq('id', viewingAccountId); } catch(e){}
+        }
         switchTab('accounts');
         loadData();
       }
@@ -1094,13 +1094,15 @@
       btn.innerText = 'Kaydediliyor...';
       btn.disabled = true;
 
-      // Bakiyeyi güncelle (-15000 + 2000 = -13000)
+      // Bakiyeyi Canlı Güncelle (-15000 + 2000 = -13000)
       const a = accounts.find(x => x.id === accId);
       if (a) {
         const cur = parseFloat(a.balance);
         a.balance = currentType === 'expense' ? (cur - amt) : (cur + amt);
         localStorage.setItem('bb_wallet_accounts', JSON.stringify(accounts));
-        try { await supabase.from('accounts').update({ balance: a.balance }).eq('id', accId); } catch(e){}
+        if (sbClient) {
+          try { await sbClient.from('accounts').update({ balance: a.balance }).eq('id', accId); } catch(e){}
+        }
       }
 
       const tx = {
@@ -1115,7 +1117,9 @@
       };
       transactions.unshift(tx);
       localStorage.setItem('bb_wallet_txs', JSON.stringify(transactions));
-      try { await supabase.from('transactions').insert([tx]); } catch(e){}
+      if (sbClient) {
+        try { await sbClient.from('transactions').insert([tx]); } catch(e){}
+      }
 
       btn.innerText = 'Kaydet';
       btn.disabled = false;
@@ -1200,16 +1204,6 @@
       `;
       tbody.appendChild(incTr);
 
-      const incSub = document.createElement('tr');
-      incSub.innerHTML = `
-        <td class="py-2.5 px-3 flex items-center space-x-2">
-          <span>💰</span><span>Gelir</span>
-        </td>
-        <td class="py-2.5 px-3 text-right font-medium">𝄘 ₺${totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-        <td class="py-2.5 px-3 text-right text-slate-400">𝄘 ₺53.386,00</td>
-      `;
-      tbody.appendChild(incSub);
-
       const expTr = document.createElement('tr');
       expTr.className = 'font-bold bg-slate-50/70 text-slate-800';
       expTr.innerHTML = `
@@ -1238,12 +1232,7 @@
       });
     }
 
-    function pickMonth(mName) {
-      document.getElementById('current-month-display').innerText = `${mName} 2026 ⌄`;
-      toggleDateModal(false);
-    }
-
-    // Uygulamayı Başlat
+    // Başlat
     initCategories();
     loadData();
   </script>
